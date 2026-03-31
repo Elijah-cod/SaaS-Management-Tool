@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import type { NextFunction, Request, Response } from "express";
 import projectRoutes from "./routes/projectRoutes";
 import searchRoutes from "./routes/searchRoutes";
 import taskRoutes from "./routes/taskRoutes";
@@ -37,7 +38,7 @@ app.use("/users", userRoutes);
 app.use("/teams", teamRoutes);
 app.use("/search", searchRoutes);
 
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);
   res.status(500).json({ message: "Unexpected server error" });
 });

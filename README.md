@@ -45,6 +45,11 @@ Create [client/.env.local](/Users/elijah/Documents/Projects/SaaS-Management-Tool
 
 ```env
 NEXT_PUBLIC_API_BASE_URL="http://localhost:4000"
+AUTH_SECRET="replace-with-a-long-random-string"
+DEMO_USER_EMAIL="demo@saasmanager.app"
+DEMO_USER_PASSWORD="ChangeMe123!"
+DEMO_USER_NAME="Jordan Lee"
+DEMO_USER_ROLE="Product Manager"
 ```
 
 Example file: [client/.env.local.example](/Users/elijah/Documents/Projects/SaaS-Management-Tool/client/.env.local.example)
@@ -105,6 +110,11 @@ npm run dev
 
 Open `http://localhost:3000/home`.
 
+To sign in locally, use the credentials from `client/.env.local`. The default demo login is:
+
+- `demo@saasmanager.app`
+- `ChangeMe123!`
+
 ## Useful Commands
 
 ### Client
@@ -158,11 +168,12 @@ Already in place:
 - typed client and server build/typecheck commands
 - separate frontend/backend env files
 - backend-backed task board interactions
+- NextAuth credentials-based login with environment-configured demo user
 
 Still recommended before shipping publicly:
 
 - replace the legacy `cognitoId` field in Prisma with a non-AWS auth model
-- add authentication and authorization
+- replace the demo credentials login with database-backed authentication and role-based authorization
 - add request validation with `zod`
 - add automated tests for server routes and core client flows
 - move attachment handling from metadata-only to real object storage
@@ -221,7 +232,7 @@ Use managed PostgreSQL in production:
 
 - task attachments are currently metadata-only, not binary file uploads
 - task assignee persistence currently supports a single stored assignee even though the UI can be expanded later to true multi-assignee support
-- auth is not production-complete yet
+- the current login flow uses environment-backed demo credentials rather than a persisted Prisma user table
 
 ## Recommended Next Steps
 

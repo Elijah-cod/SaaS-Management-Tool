@@ -1,7 +1,18 @@
 import Link from "next/link";
+import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams?: Promise<{
+    error?: string;
+  }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = (await searchParams) ?? {};
+  const hasCredentialsError = params.error === "credentials";
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-12 dark:bg-slate-950">
       <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -17,15 +28,35 @@ export default function LoginPage() {
           </p>
         </div>
 
+        <div className="mt-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-100">
+          <p className="font-semibold">Demo account</p>
+          <p className="mt-1">Email: demo@saasmanager.app</p>
+          <p>Password: ChangeMe123!</p>
+        </div>
+
+        {hasCredentialsError ? (
+          <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
+            We couldn&apos;t sign you in with those credentials. Try the demo account or update the auth env values.
+          </div>
+        ) : null}
+
         <form
           action={async (formData) => {
             "use server";
 
-            await signIn("credentials", {
-              email: formData.get("email"),
-              password: formData.get("password"),
-              redirectTo: "/home",
-            });
+            try {
+              await signIn("credentials", {
+                email: formData.get("email"),
+                password: formData.get("password"),
+                redirectTo: "/home",
+              });
+            } catch (error) {
+              if (error instanceof AuthError) {
+                redirect("/login?error=credentials");
+              }
+
+              throw error;
+            }
           }}
           className="mt-8 space-y-4"
         >

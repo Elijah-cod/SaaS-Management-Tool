@@ -1,16 +1,16 @@
-import { configureStore } from "@reduxjs/toolkit";
-import { setupListeners } from "@reduxjs/toolkit/query";
-import { api } from "./state/api";
-import globalReducer from "./state";
+"use client";
+import { useRef } from "react";
+import { Provider } from "react-redux";
+import { makeStore, AppStore } from "../lib/store";
 
-export const store = configureStore({
-    reducer: {
-        global: globalReducer,
-        [api.reducerPath]: api.reducer,
-    },
-    middleware: (getDefault) => getDefault().concat(api.middleware),
-});
-
-setupListeners(store.dispatch);
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+export default function StoreProvider({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    const storeRef = useRef<AppStore | null>(null);
+    if (!storeRef.current) {
+        storeRef.current = makeStore();
+    }
+    return <Provider store={storeRef.current}>{children}</Provider>;
+}

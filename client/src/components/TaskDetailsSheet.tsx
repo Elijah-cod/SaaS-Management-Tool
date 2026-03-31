@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { MessageSquare, Paperclip, UserPlus, X } from "lucide-react";
 import { mockUsers } from "@/lib/mock-data";
+import { useGetUsersQuery } from "@/app/state/api";
 import type { Task, TaskAttachment, TaskComment, User } from "@/types";
 
 interface TaskDetailsSheetProps {
@@ -37,10 +38,11 @@ export default function TaskDetailsSheet({
   onTaskChange,
 }: TaskDetailsSheetProps) {
   const [commentBody, setCommentBody] = useState("");
+  const { data: users = mockUsers } = useGetUsersQuery();
 
   const creator = useMemo(
-    () => mockUsers.find((user) => user.id === task?.createdById),
-    [task]
+    () => users.find((user) => user.id === task?.createdById),
+    [task, users]
   );
 
   if (!task) {
@@ -48,17 +50,12 @@ export default function TaskDetailsSheet({
   }
 
   const toggleAssignee = (userId: string) => {
-    const current = new Set(task.assigneeIds ?? []);
-    if (current.has(userId)) {
-      current.delete(userId);
-    } else {
-      current.add(userId);
-    }
+    const nextAssigneeId = task.assigneeId === userId ? null : userId;
 
     onTaskChange({
       ...task,
-      assigneeIds: Array.from(current),
-      assigneeId: Array.from(current)[0] ?? null,
+      assigneeIds: nextAssigneeId ? [nextAssigneeId] : [],
+      assigneeId: nextAssigneeId,
     });
   };
 
@@ -182,8 +179,8 @@ export default function TaskDetailsSheet({
             </h4>
           </div>
           <div className="mt-4 grid gap-3">
-            {mockUsers.map((user) => {
-              const selected = (task.assigneeIds ?? []).includes(user.id);
+            {users.map((user) => {
+              const selected = task.assigneeId === user.id;
               return (
                 <button
                   key={user.id}
@@ -230,7 +227,7 @@ export default function TaskDetailsSheet({
           </div>
           <div className="mt-4 space-y-3">
             {(task.comments ?? []).map((comment) => {
-              const author = mockUsers.find((user) => user.id === comment.authorId);
+              const author = users.find((user) => user.id === comment.authorId);
               return (
                 <article
                   key={comment.id}
@@ -288,7 +285,7 @@ export default function TaskDetailsSheet({
           </div>
           <div className="mt-4 space-y-3">
             {(task.attachments ?? []).map((attachment) => {
-              const author = mockUsers.find((user) => user.id === attachment.addedById);
+              const author = users.find((user) => user.id === attachment.addedById);
               return (
                 <div
                   key={attachment.id}

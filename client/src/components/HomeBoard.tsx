@@ -10,9 +10,15 @@ import {
 import { GripVertical } from "lucide-react";
 import { mockTasks, mockUsers } from "@/lib/mock-data";
 import TaskDetailsSheet from "@/components/TaskDetailsSheet";
+import {
+  useCreateTaskAttachmentMutation,
+  useCreateTaskCommentMutation,
+  useGetTasksQuery,
+  useGetUsersQuery,
+  useUpdateTaskAssigneeMutation,
+  useUpdateTaskStatusMutation,
+} from "@/app/state/api";
 import type { Task, User } from "@/types";
-
-const STORAGE_KEY = "pm-home-board-v1";
 
 const columns = [
   { id: "Backlog", title: "Backlog", accent: "text-slate-950 dark:text-white" },
@@ -43,6 +49,13 @@ const roleStyles: Record<string, string> = {
   default: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
 };
 
+const emptyBoard = (): BoardState => ({
+  Backlog: [],
+  "In Progress": [],
+  Review: [],
+  Completed: [],
+});
+
 const normalizeTaskStatus = (status?: string): ColumnId => {
   if (status === "Done") {
     return "Completed";
@@ -55,13 +68,8 @@ const normalizeTaskStatus = (status?: string): ColumnId => {
   return "Backlog";
 };
 
-const createInitialBoard = (tasks: Task[]): BoardState => {
-  const initialBoard: BoardState = {
-    Backlog: [],
-    "In Progress": [],
-    Review: [],
-    Completed: [],
-  };
+const createBoard = (tasks: Task[]): BoardState => {
+  const initialBoard = emptyBoard();
 
   tasks.forEach((task) => {
     const normalizedStatus = normalizeTaskStatus(task.status);
@@ -90,38 +98,46 @@ const getUserInitials = (user?: User) =>
     .toUpperCase() ?? "NA";
 
 export default function HomeBoard() {
-  const [board, setBoard] = useState<BoardState>(() => createInitialBoard(mockTasks));
+  const { data: taskData = mockTasks } = useGetTasksQuery();
+  const { data: users = mockUsers } = useGetUsersQuery();
+  const [updateTaskStatus] = useUpdateTaskStatusMutation();
+  const [updateTaskAssignee] = useUpdateTaskAssigneeMutation();
+  const [createTaskComment] = useCreateTaskCommentMutation();
+  const [createTaskAttachment] = useCreateTaskAttachmentMutation();
+
+  const [board, setBoard] = useState<BoardState>(() => createBoard(taskData));
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
-  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const persisted = window.localStorage.getItem(STORAGE_KEY);
-      if (persisted) {
-        const parsedTasks = JSON.parse(persisted) as Task[];
-        setBoard(createInitialBoard(parsedTasks));
-      }
-    } catch (error) {
-      console.error("Failed to read persisted board state", error);
-    } finally {
-      setIsReady(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isReady) {
-      return;
-    }
-
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(flattenBoard(board)));
-  }, [board, isReady]);
+    setBoard(createBoard(taskData));
+  }, [taskData]);
 
   const selectedTask = useMemo(
     () => flattenBoard(board).find((task) => task.id === selectedTaskId) ?? null,
     [board, selectedTaskId]
   );
 
-  const handleDragEnd = ({ source, destination }: DropResult) => {
+  const syncTaskIntoBoard = (updatedTask: Task) => {
+    setBoard((currentBoard) => {
+      const nextBoard = emptyBoard();
+
+      flattenBoard(currentBoard)
+        .filter((task) => task.id !== updatedTask.id)
+        .forEach((task) => {
+          nextBoard[normalizeTaskStatus(task.status)].push(task);
+        });
+
+      nextBoard[normalizeTaskStatus(updatedTask.status)].push({
+        ...updatedTask,
+        status: normalizeTaskStatus(updatedTask.status),
+      });
+
+      return nextBoard;
+    });
+    setSelectedTaskId(updatedTask.id);
+  };
+
+  const handleDragEnd = async ({ source, destination }: DropResult) => {
     if (!destination) {
       return;
     }
@@ -136,6 +152,8 @@ export default function HomeBoard() {
       return;
     }
 
+    let movedTaskId: number | null = null;
+
     setBoard((currentBoard) => {
       const sourceItems = [...currentBoard[sourceColumnId]];
       const destinationItems =
@@ -149,6 +167,7 @@ export default function HomeBoard() {
         return currentBoard;
       }
 
+      movedTaskId = movedTask.id;
       const updatedTask = { ...movedTask, status: destinationColumnId };
       destinationItems.splice(destination.index, 0, updatedTask);
 
@@ -158,28 +177,82 @@ export default function HomeBoard() {
         [destinationColumnId]: destinationItems,
       };
     });
+
+    if (movedTaskId == null) {
+      return;
+    }
+
+    try {
+      const updatedTask = await updateTaskStatus({
+        taskId: movedTaskId,
+        status: destinationColumnId,
+      }).unwrap();
+      syncTaskIntoBoard(updatedTask);
+    } catch (error) {
+      console.error("Failed to persist task status", error);
+      setBoard(createBoard(taskData));
+    }
   };
 
-  const handleTaskChange = (updatedTask: Task) => {
-    setBoard((currentBoard) => {
-      const nextBoard: BoardState = {
-        Backlog: currentBoard.Backlog.filter((task) => task.id !== updatedTask.id),
-        "In Progress": currentBoard["In Progress"].filter(
-          (task) => task.id !== updatedTask.id
-        ),
-        Review: currentBoard.Review.filter((task) => task.id !== updatedTask.id),
-        Completed: currentBoard.Completed.filter((task) => task.id !== updatedTask.id),
-      };
+  const handleTaskChange = async (updatedTask: Task) => {
+    const previousTask =
+      flattenBoard(board).find((task) => task.id === updatedTask.id) ?? updatedTask;
 
-      const normalizedStatus = normalizeTaskStatus(updatedTask.status);
-      nextBoard[normalizedStatus] = [
-        ...nextBoard[normalizedStatus],
-        { ...updatedTask, status: normalizedStatus },
-      ];
+    syncTaskIntoBoard(updatedTask);
 
-      return nextBoard;
-    });
-    setSelectedTaskId(updatedTask.id);
+    try {
+      if (updatedTask.status !== previousTask.status) {
+        const persistedTask = await updateTaskStatus({
+          taskId: updatedTask.id,
+          status: updatedTask.status,
+        }).unwrap();
+        syncTaskIntoBoard(persistedTask);
+        return;
+      }
+
+      if ((updatedTask.assigneeId ?? null) !== (previousTask.assigneeId ?? null)) {
+        const persistedTask = await updateTaskAssignee({
+          taskId: updatedTask.id,
+          assigneeId: updatedTask.assigneeId ?? null,
+        }).unwrap();
+        syncTaskIntoBoard(persistedTask);
+        return;
+      }
+
+      if ((updatedTask.comments?.length ?? 0) > (previousTask.comments?.length ?? 0)) {
+        const nextComment = updatedTask.comments?.at(-1);
+        if (nextComment) {
+          const persistedTask = await createTaskComment({
+            taskId: updatedTask.id,
+            authorId: nextComment.authorId,
+            body: nextComment.body,
+          }).unwrap();
+          syncTaskIntoBoard(persistedTask);
+        }
+        return;
+      }
+
+      if (
+        (updatedTask.attachments?.length ?? 0) >
+        (previousTask.attachments?.length ?? 0)
+      ) {
+        const nextAttachment = updatedTask.attachments?.at(-1);
+        if (nextAttachment) {
+          const persistedTask = await createTaskAttachment({
+            taskId: updatedTask.id,
+            attachment: {
+              name: nextAttachment.name,
+              sizeLabel: nextAttachment.sizeLabel,
+              addedById: nextAttachment.addedById,
+            },
+          }).unwrap();
+          syncTaskIntoBoard(persistedTask);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to persist task change", error);
+      setBoard(createBoard(taskData));
+    }
   };
 
   return (
@@ -203,9 +276,9 @@ export default function HomeBoard() {
               <Droppable droppableId={column.id}>
                 {(provided, snapshot) => (
                   <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className={`min-h-24 space-y-4 rounded-[1.75rem] p-1 transition ${
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className={`min-h-24 space-y-4 rounded-[1.75rem] p-1 transition ${
                       snapshot.isDraggingOver
                         ? "bg-sky-50/80 dark:bg-sky-950/30"
                         : "bg-transparent"
@@ -213,11 +286,9 @@ export default function HomeBoard() {
                   >
                     {board[column.id].map((task, index) => {
                       const assignees = (task.assigneeIds ?? [])
-                        .map((id) => mockUsers.find((user) => user.id === id))
+                        .map((id) => users.find((user) => user.id === id))
                         .filter((user): user is User => Boolean(user));
-                      const creator = mockUsers.find(
-                        (user) => user.id === task.createdById
-                      );
+                      const creator = users.find((user) => user.id === task.createdById);
 
                       return (
                         <Draggable

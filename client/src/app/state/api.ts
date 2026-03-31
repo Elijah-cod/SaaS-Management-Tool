@@ -1,9 +1,18 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { mockProjects, mockTasks, mockTeams, mockUsers } from "@/lib/mock-data";
-import type { Project, Task, Team, User } from "@/types";
+import type {
+  Project,
+  Task,
+  TaskAttachment,
+  Team,
+  User,
+} from "@/types";
+
+const apiBaseUrl =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseUrl: apiBaseUrl,
   prepareHeaders: (headers) => {
     if (typeof window !== "undefined") {
       const token = window.localStorage.getItem("accessToken");
@@ -36,18 +45,28 @@ export const api = createApi({
       query: (body) => ({ url: "projects", method: "POST", body }),
       invalidatesTags: ["Projects"],
     }),
-    getTasks: build.query<Task[], { projectId: number }>({
-      async queryFn({ projectId }, _api, _extraOptions, fetchWithBQ) {
-        const result = await fetchWithBQ(`tasks?projectId=${projectId}`);
+    getTasks: build.query<Task[], { projectId?: number } | void>({
+      async queryFn(arg, _api, _extraOptions, fetchWithBQ) {
+        const projectId = arg && "projectId" in arg ? arg.projectId : undefined;
+        const result = await fetchWithBQ(
+          projectId ? `tasks?projectId=${projectId}` : "tasks"
+        );
+
         if (result.error) {
-          return { data: mockTasks.filter((task) => task.projectId === projectId) };
+          return {
+            data:
+              projectId === undefined
+                ? mockTasks
+                : mockTasks.filter((task) => task.projectId === projectId),
+          };
         }
 
+        const tasks = (result.data as Task[]) ?? mockTasks;
         return {
           data:
-            ((result.data as Task[]) ?? mockTasks).filter(
-              (task) => task.projectId === projectId
-            ),
+            projectId === undefined
+              ? tasks
+              : tasks.filter((task) => task.projectId === projectId),
         };
       },
       providesTags: (result) =>
@@ -66,6 +85,52 @@ export const api = createApi({
       }),
       invalidatesTags: (result, error, { taskId }) => [
         { type: "Tasks", id: taskId },
+        "Tasks",
+      ],
+    }),
+    updateTaskAssignee: build.mutation<
+      Task,
+      { taskId: number; assigneeId: string | null }
+    >({
+      query: ({ taskId, assigneeId }) => ({
+        url: `tasks/${taskId}/assignee`,
+        method: "PATCH",
+        body: { assigneeId },
+      }),
+      invalidatesTags: (result, error, { taskId }) => [
+        { type: "Tasks", id: taskId },
+        "Tasks",
+      ],
+    }),
+    createTaskComment: build.mutation<
+      Task,
+      { taskId: number; authorId: string; body: string }
+    >({
+      query: ({ taskId, ...body }) => ({
+        url: `tasks/${taskId}/comments`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (result, error, { taskId }) => [
+        { type: "Tasks", id: taskId },
+        "Tasks",
+      ],
+    }),
+    createTaskAttachment: build.mutation<
+      Task,
+      {
+        taskId: number;
+        attachment: Pick<TaskAttachment, "name" | "sizeLabel" | "addedById">;
+      }
+    >({
+      query: ({ taskId, attachment }) => ({
+        url: `tasks/${taskId}/attachments`,
+        method: "POST",
+        body: attachment,
+      }),
+      invalidatesTags: (result, error, { taskId }) => [
+        { type: "Tasks", id: taskId },
+        "Tasks",
       ],
     }),
     getUsers: build.query<User[], void>({
@@ -98,6 +163,9 @@ export const {
   useCreateProjectMutation,
   useGetTasksQuery,
   useUpdateTaskStatusMutation,
+  useUpdateTaskAssigneeMutation,
+  useCreateTaskCommentMutation,
+  useCreateTaskAttachmentMutation,
   useGetUsersQuery,
   useGetTeamsQuery,
 } = api;

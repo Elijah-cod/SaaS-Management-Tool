@@ -1,18 +1,35 @@
-import express from "express";
+import "dotenv/config";
 import cors from "cors";
-import morgan from "morgan";
+import express from "express";
 import helmet from "helmet";
+import morgan from "morgan";
 import projectRoutes from "./routes/projectRoutes";
-import taskRoutes from "./routes/taskRoutes";
-import userRoutes from "./routes/userRoutes";
-import teamRoutes from "./routes/teamRoutes";
 import searchRoutes from "./routes/searchRoutes";
+import taskRoutes from "./routes/taskRoutes";
+import teamRoutes from "./routes/teamRoutes";
+import userRoutes from "./routes/userRoutes";
 
 const app = express();
-app.use(express.json());
-app.use(cors());
+const port = Number(process.env.PORT) || 4000;
+const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+
+app.use(
+  cors({
+    origin: clientUrl,
+    credentials: true,
+  })
+);
 app.use(helmet());
 app.use(morgan("common"));
+app.use(express.json());
+
+app.get("/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    service: "server",
+    timestamp: new Date().toISOString(),
+  });
+});
 
 app.use("/projects", projectRoutes);
 app.use("/tasks", taskRoutes);
@@ -20,5 +37,11 @@ app.use("/users", userRoutes);
 app.use("/teams", teamRoutes);
 app.use("/search", searchRoutes);
 
-const port = Number(process.env.PORT) || 3001;
-app.listen(port, "0.0.0.0", () => console.log(`Server running on port ${port}`));
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(err);
+  res.status(500).json({ message: "Unexpected server error" });
+});
+
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Server running on http://0.0.0.0:${port}`);
+});

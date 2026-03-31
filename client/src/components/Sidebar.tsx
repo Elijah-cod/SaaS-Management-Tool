@@ -6,7 +6,7 @@ import { useAppSelector } from "@/lib/hooks";
 
 const navItems = [
   { href: "/home", label: "Home", icon: House },
-  { href: "/projects/1", label: "Projects", icon: FolderKanban },
+  { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/timeline", label: "Timeline", icon: TimerReset },
   { href: "/search", label: "Search", icon: Search },
   { href: "/users", label: "Users", icon: Users },

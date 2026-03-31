@@ -1,15 +1,10 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,8 +14,70 @@
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+html,
+body,
+:root {
+  height: 100%;
+  width: 100%;
+}
+
+/* Material UI Data Grid - Custom Styling */
+.MuiDataGrid-root {
+  border: none !important;
+  color: inherit !important;
+}
+
+.MuiDataGrid-cell {
+  border-bottom: 1px solid #e5e7eb !important; /* light gray border */
+}
+
+.dark .MuiDataGrid-cell {
+  border-bottom: 1px solid #374151 !important; /* dark gray border */
+}
+
+.MuiDataGrid-columnHeaders {
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+.dark .MuiDataGrid-columnHeaders {
+  border-bottom: 1px solid #374151 !important;
+}
+
+/* Gantt Chart Overrides (gantt-task-react) */
+/* These ensure the chart labels and bars look clean */
+.gantt-task-react .bar-label {
+  font-size: 12px;
+  fill: #fff;
+  font-weight: 500;
+}
+
+.gantt-task-react .bar-progress {
+  fill: #2563eb !important; /* Primary Blue */
+}
+
+.gantt-task-react .bar-background {
+  fill: #f3f4f6 !important;
+}
+
+.dark .gantt-task-react .bar-background {
+  fill: #1f2937 !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }

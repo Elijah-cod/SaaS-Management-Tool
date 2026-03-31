@@ -34,6 +34,9 @@ export interface Task {
   projectId: number;
   assigneeId?: string | null;
   dueDate?: string | null;
+  type?: string;
+  ticket?: string;
+  assigneeIds?: string[];
 }
 
 export interface DashboardStat {

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MoveRight } from "lucide-react";
+import HomeBoard from "@/components/HomeBoard";
 import { useGetProjectsQuery } from "@/app/state/api";
 import type { DashboardStat } from "@/types";
 
@@ -11,12 +12,16 @@ export default function HomePage() {
   const stats: DashboardStat[] = [
     {
       label: "Active projects",
-      value: String(projects.filter((project) => project.status !== "Completed").length),
+      value: String(
+        projects.filter((project) => project.status !== "Completed").length
+      ),
       helperText: "Live workstreams currently in motion.",
     },
     {
       label: "At risk",
-      value: String(projects.filter((project) => project.status === "At Risk").length),
+      value: String(
+        projects.filter((project) => project.status === "At Risk").length
+      ),
       helperText: "Projects needing closer delivery attention.",
     },
     {
@@ -29,71 +34,62 @@ export default function HomePage() {
     },
   ];
 
-  const highlightedProjects = projects.slice(0, 3);
-
   return (
     <section className="space-y-6">
-      <div className="space-y-2">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-          Home
-        </p>
-        <h2 className="text-3xl font-semibold">Portfolio snapshot</h2>
-        <p className="max-w-2xl text-sm text-slate-600 dark:text-slate-300">
-          Start here with the current project pipeline, delivery pressure, and team momentum.
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        {stats.map((stat) => (
-          <article
-            key={stat.label}
-            className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-          >
-            <p className="text-sm text-slate-500 dark:text-slate-400">{stat.label}</p>
-            <p className="mt-3 text-3xl font-semibold text-slate-900 dark:text-white">{stat.value}</p>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{stat.helperText}</p>
-          </article>
-        ))}
-      </div>
-
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-2">
-            <h3 className="text-xl font-semibold">Priority projects</h3>
-            <p className="max-w-2xl text-sm text-slate-600 dark:text-slate-300">
-              Start with the projects carrying the most delivery weight this week.
-            </p>
+      <div className="overflow-hidden rounded-[2rem] border border-white/60 bg-white/70 shadow-[0_24px_80px_-28px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/75">
+        <div className="flex flex-col gap-8 p-6 md:p-8 xl:flex-row xl:items-end xl:justify-between">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-sky-700 dark:border-sky-900 dark:bg-sky-950/60 dark:text-sky-300">
+              Home Board
+              <MoveRight size={14} />
+            </div>
+            <div className="space-y-3">
+              <h2 className="max-w-3xl text-3xl font-semibold tracking-tight text-slate-950 dark:text-white md:text-4xl">
+                Delivery board built for momentum, not just status reporting.
+              </h2>
+              <p className="max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 md:text-base">
+                Organize the week like a product team: swipe across lanes on
+                mobile, drag cards between stages, and keep the most important
+                work visible at a glance.
+              </p>
+            </div>
           </div>
-          <Link
-            href="/projects"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-300"
-          >
-            View all projects
-            <ArrowRight size={16} />
-          </Link>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/projects"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+            >
+              View all projects
+              <ArrowRight size={16} />
+            </Link>
+            <div className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white/70 px-5 py-3 text-sm font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-300">
+              Drag cards between lanes to reprioritize
+            </div>
+          </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {highlightedProjects.map((project) => (
+        <div className="grid gap-3 border-t border-white/70 bg-slate-50/60 p-4 dark:border-slate-800/80 dark:bg-slate-950/30 md:grid-cols-3 md:p-6">
+          {stats.map((stat) => (
             <article
-              key={project.id}
-              className="rounded-3xl bg-slate-50 p-5 dark:bg-slate-950"
+              key={stat.label}
+              className="rounded-[1.5rem] border border-white/80 bg-white/80 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/90"
             >
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                {project.status}
+                {stat.label}
               </p>
-              <h4 className="mt-2 text-lg font-semibold">{project.name}</h4>
+              <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
+                {stat.value}
+              </p>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                {project.description}
+                {stat.helperText}
               </p>
-              <div className="mt-4 flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
-                <span>{project.owner}</span>
-                <span>{project.progress ?? 0}% complete</span>
-              </div>
             </article>
           ))}
         </div>
       </div>
+
+      <HomeBoard />
     </section>
   );
 }

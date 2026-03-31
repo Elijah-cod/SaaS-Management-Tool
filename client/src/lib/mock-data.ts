@@ -1,0 +1,73 @@
+import type { Project, Task, Team, User } from "@/types";
+
+export const mockProjects: Project[] = [
+  {
+    id: 1,
+    name: "Client Portal Redesign",
+    description: "Refresh the customer workspace and improve conversion on trial accounts.",
+    status: "In Progress",
+    priority: "High",
+    dueDate: "2026-04-18",
+    teamId: 1,
+    progress: 68,
+    owner: "Amina Hassan",
+    tags: ["Design", "Growth"],
+  },
+  {
+    id: 2,
+    name: "Billing Automation",
+    description: "Reduce manual invoicing and unify payment event handling.",
+    status: "Planning",
+    priority: "Medium",
+    dueDate: "2026-05-03",
+    teamId: 3,
+    progress: 24,
+    owner: "Daniel Kimani",
+    tags: ["Finance", "Backend"],
+  },
+  {
+    id: 3,
+    name: "Mobile Analytics",
+    description: "Instrument feature usage across iOS and Android releases.",
+    status: "At Risk",
+    priority: "High",
+    dueDate: "2026-04-11",
+    teamId: 2,
+    progress: 52,
+    owner: "Lina Patel",
+    tags: ["Data", "Mobile"],
+  },
+  {
+    id: 4,
+    name: "Support Ops Dashboard",
+    description: "Build a shared command center for tickets, SLAs, and escalations.",
+    status: "Completed",
+    priority: "Low",
+    dueDate: "2026-03-22",
+    teamId: 4,
+    progress: 100,
+    owner: "Musa Odhiambo",
+    tags: ["Operations"],
+  },
+];
+
+export const mockTasks: Task[] = [
+  { id: 101, title: "Finalize page hierarchy", status: "Done", priority: "High", projectId: 1, assigneeId: "u1", dueDate: "2026-04-03" },
+  { id: 102, title: "Implement onboarding widgets", status: "In Progress", priority: "High", projectId: 1, assigneeId: "u2", dueDate: "2026-04-09" },
+  { id: 103, title: "Map invoice lifecycle", status: "Todo", priority: "Medium", projectId: 2, assigneeId: "u2", dueDate: "2026-04-14" },
+  { id: 104, title: "Define analytics schema", status: "In Progress", priority: "High", projectId: 3, assigneeId: "u3", dueDate: "2026-04-05" },
+];
+
+export const mockUsers: User[] = [
+  { id: "u1", name: "Amina Hassan", email: "amina@saasmanager.dev", role: "Product Manager" },
+  { id: "u2", name: "Daniel Kimani", email: "daniel@saasmanager.dev", role: "Frontend Engineer" },
+  { id: "u3", name: "Lina Patel", email: "lina@saasmanager.dev", role: "Designer" },
+  { id: "u4", name: "Musa Odhiambo", email: "musa@saasmanager.dev", role: "Operations Lead" },
+];
+
+export const mockTeams: Team[] = [
+  { id: 1, name: "Growth", description: "Activation, onboarding, and user journeys", memberCount: 6 },
+  { id: 2, name: "Insights", description: "Analytics, reporting, and experimentation", memberCount: 4 },
+  { id: 3, name: "Platform", description: "Payments, infrastructure, and core services", memberCount: 8 },
+  { id: 4, name: "Operations", description: "Support workflows and internal tooling", memberCount: 5 },
+];

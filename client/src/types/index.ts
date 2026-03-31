@@ -21,6 +21,9 @@ export interface Project {
   priority?: string;
   dueDate?: string | null;
   teamId?: number | null;
+  progress?: number;
+  owner?: string;
+  tags?: string[];
 }
 
 export interface Task {
@@ -31,4 +34,10 @@ export interface Task {
   projectId: number;
   assigneeId?: string | null;
   dueDate?: string | null;
+}
+
+export interface DashboardStat {
+  label: string;
+  value: string;
+  helperText: string;
 }

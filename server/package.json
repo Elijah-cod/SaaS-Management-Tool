@@ -10,7 +10,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/src/index.js",
     "typecheck": "tsc --noEmit",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts",
+    "test": "node --test -r ts-node/register src/**/*.test.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

@@ -7,6 +7,13 @@ import {
   updateTaskStatus,
 } from "../controllers/taskController";
 import { requireAuth, requireRole } from "../middleware/auth";
+import {
+  validateBody,
+  validateTaskAssigneeBody,
+  validateTaskAttachmentBody,
+  validateTaskCommentBody,
+  validateTaskStatusBody,
+} from "../middleware/validation";
 
 const router = Router();
 
@@ -20,6 +27,7 @@ router.patch(
     "Designer",
     "Operations Lead"
   ),
+  validateBody(validateTaskStatusBody),
   updateTaskStatus
 );
 router.patch(
@@ -31,6 +39,7 @@ router.patch(
     "Designer",
     "Operations Lead"
   ),
+  validateBody(validateTaskAssigneeBody),
   updateTaskAssignee
 );
 router.post(
@@ -42,6 +51,7 @@ router.post(
     "Designer",
     "Operations Lead"
   ),
+  validateBody(validateTaskCommentBody),
   createTaskComment
 );
 router.post(
@@ -53,6 +63,7 @@ router.post(
     "Designer",
     "Operations Lead"
   ),
+  validateBody(validateTaskAttachmentBody),
   createTaskAttachment
 );
 

@@ -134,6 +134,7 @@ npm run dev
 npm run typecheck
 npm run build
 npm run seed
+npm run test
 ```
 
 ## Current API Surface
@@ -171,6 +172,8 @@ Already in place:
 - NextAuth credentials login backed by the Express auth API
 - bearer-token protection on dashboard API routes
 - role-based authorization on write actions
+- request validation on auth, project, and task mutation endpoints
+- server integration tests for auth and route protection
 
 Still recommended before shipping publicly:
 

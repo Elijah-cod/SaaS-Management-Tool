@@ -4,12 +4,16 @@ interface GlobalState {
     isSidebarCollapsed: boolean;
     isMobileSidebarOpen: boolean;
     isDarkMode: boolean;
+    accessToken: string | null;
+    authStatus: "loading" | "authenticated" | "unauthenticated";
 }
 
 const initialState: GlobalState = {
     isSidebarCollapsed: false,
     isMobileSidebarOpen: false,
     isDarkMode: false,
+    accessToken: null,
+    authStatus: "loading",
 };
 
 export const globalSlice = createSlice({
@@ -25,8 +29,23 @@ export const globalSlice = createSlice({
         setIsDarkMode: (state, action: PayloadAction<boolean>) => {
             state.isDarkMode = action.payload;
         },
+        setAccessToken: (state, action: PayloadAction<string | null>) => {
+            state.accessToken = action.payload;
+        },
+        setAuthStatus: (
+            state,
+            action: PayloadAction<GlobalState["authStatus"]>
+        ) => {
+            state.authStatus = action.payload;
+        },
     },
 });
 
-export const { setIsSidebarCollapsed, setIsMobileSidebarOpen, setIsDarkMode } = globalSlice.actions;
+export const {
+    setIsSidebarCollapsed,
+    setIsMobileSidebarOpen,
+    setIsDarkMode,
+    setAccessToken,
+    setAuthStatus,
+} = globalSlice.actions;
 export default globalSlice.reducer;

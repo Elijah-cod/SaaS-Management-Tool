@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createTaskAttachment = exports.createTaskComment = exports.updateTaskAssignee = exports.updateTaskStatus = exports.getTasks = void 0;
+exports.createTaskAttachment = exports.createTaskComment = exports.updateTaskAssignee = exports.updateTaskStatus = exports.createTask = exports.getTasks = void 0;
 const prisma_1 = require("../lib/prisma");
 const serializeTask = async (taskId) => {
     const task = await prisma_1.prisma.task.findUnique({
@@ -95,6 +95,35 @@ const getTasks = async (req, res) => {
     }
 };
 exports.getTasks = getTasks;
+const createTask = async (req, res) => {
+    const { title, description, projectId, status, priority, dueDate, assigneeId, type, } = req.body;
+    if (!req.authUser) {
+        return res.status(401).json({ message: "Authentication required" });
+    }
+    try {
+        const createdTask = await prisma_1.prisma.task.create({
+            data: {
+                title,
+                description,
+                projectId,
+                status: status ?? "Backlog",
+                priority: priority ?? "Medium",
+                dueDate: dueDate ? new Date(dueDate) : null,
+                tags: type ?? "Task",
+                authorUserId: req.authUser.userId,
+                assignedUserId: assigneeId
+                    ? Number(String(assigneeId).replace("u", ""))
+                    : null,
+            },
+        });
+        const serializedTask = await serializeTask(createdTask.id);
+        return res.status(201).json(serializedTask);
+    }
+    catch (error) {
+        return res.status(500).json({ message: "Error creating task", error });
+    }
+};
+exports.createTask = createTask;
 const updateTaskStatus = async (req, res) => {
     const taskId = Number(req.params.taskId);
     const { status } = req.body;

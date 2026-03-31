@@ -103,6 +103,58 @@ export const getTasks = async (req: Request, res: Response) => {
   }
 };
 
+export const createTask = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  const {
+    title,
+    description,
+    projectId,
+    status,
+    priority,
+    dueDate,
+    assigneeId,
+    type,
+  } = req.body as {
+    title: string;
+    description?: string;
+    projectId: number;
+    status?: string;
+    priority?: string;
+    dueDate?: string | null;
+    assigneeId?: string | null;
+    type?: string;
+  };
+
+  if (!req.authUser) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+
+  try {
+    const createdTask = await prisma.task.create({
+      data: {
+        title,
+        description,
+        projectId,
+        status: status ?? "Backlog",
+        priority: priority ?? "Medium",
+        dueDate: dueDate ? new Date(dueDate) : null,
+        tags: type ?? "Task",
+        authorUserId: req.authUser.userId,
+        assignedUserId: assigneeId
+          ? Number(String(assigneeId).replace("u", ""))
+          : null,
+      },
+    });
+
+    const serializedTask = await serializeTask(createdTask.id);
+    return res.status(201).json(serializedTask);
+  } catch (error) {
+    return res.status(500).json({ message: "Error creating task", error });
+  }
+};
+
 export const updateTaskStatus = async (req: Request, res: Response) => {
   const taskId = Number(req.params.taskId);
   const { status } = req.body as { status?: string };

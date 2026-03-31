@@ -7,12 +7,14 @@ import {
   Droppable,
   type DropResult,
 } from "@hello-pangea/dnd";
-import { GripVertical } from "lucide-react";
-import { mockTasks, mockUsers } from "@/lib/mock-data";
+import { GripVertical, Plus } from "lucide-react";
+import { useSession } from "next-auth/react";
 import TaskDetailsSheet from "@/components/TaskDetailsSheet";
 import {
+  useCreateTaskMutation,
   useCreateTaskAttachmentMutation,
   useCreateTaskCommentMutation,
+  useGetProjectsQuery,
   useGetTasksQuery,
   useGetUsersQuery,
   useUpdateTaskAssigneeMutation,
@@ -98,19 +100,55 @@ const getUserInitials = (user?: User) =>
     .toUpperCase() ?? "NA";
 
 export default function HomeBoard() {
-  const { data: taskData = mockTasks } = useGetTasksQuery();
-  const { data: users = mockUsers } = useGetUsersQuery();
+  const { data: session, status } = useSession();
+  const sessionReady =
+    status === "authenticated" && Boolean(session?.accessToken);
+  const { data: taskData } = useGetTasksQuery(undefined, {
+    skip: !sessionReady,
+  });
+  const { data: usersData } = useGetUsersQuery(undefined, {
+    skip: !sessionReady,
+  });
+  const { data: projectsData } = useGetProjectsQuery(undefined, {
+    skip: !sessionReady,
+  });
+  const users = useMemo(() => usersData ?? [], [usersData]);
+  const projects = useMemo(() => projectsData ?? [], [projectsData]);
+  const [createTask] = useCreateTaskMutation();
   const [updateTaskStatus] = useUpdateTaskStatusMutation();
   const [updateTaskAssignee] = useUpdateTaskAssigneeMutation();
   const [createTaskComment] = useCreateTaskCommentMutation();
   const [createTaskAttachment] = useCreateTaskAttachmentMutation();
 
-  const [board, setBoard] = useState<BoardState>(() => createBoard(taskData));
+  const [board, setBoard] = useState<BoardState>(emptyBoard);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
+  const [createTaskError, setCreateTaskError] = useState<string | null>(null);
+  const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    projectId: 0,
+    priority: "Medium",
+    assigneeId: "",
+    dueDate: "",
+    type: "Feature",
+  });
 
   useEffect(() => {
-    setBoard(createBoard(taskData));
+    if (taskData) {
+      setBoard(createBoard(taskData));
+    }
   }, [taskData]);
+
+  useEffect(() => {
+    if (projects.length > 0 && newTask.projectId === 0) {
+      setNewTask((current) => ({
+        ...current,
+        projectId: projects[0].id,
+      }));
+    }
+  }, [newTask.projectId, projects]);
 
   const selectedTask = useMemo(
     () => flattenBoard(board).find((task) => task.id === selectedTaskId) ?? null,
@@ -138,6 +176,10 @@ export default function HomeBoard() {
   };
 
   const handleDragEnd = async ({ source, destination }: DropResult) => {
+    if (!sessionReady || !taskData) {
+      return;
+    }
+
     if (!destination) {
       return;
     }
@@ -195,6 +237,10 @@ export default function HomeBoard() {
   };
 
   const handleTaskChange = async (updatedTask: Task) => {
+    if (!sessionReady || !taskData) {
+      return;
+    }
+
     const previousTask =
       flattenBoard(board).find((task) => task.id === updatedTask.id) ?? updatedTask;
 
@@ -255,8 +301,253 @@ export default function HomeBoard() {
     }
   };
 
+  const handleCreateTask = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!sessionReady || !newTask.title.trim() || !newTask.projectId) {
+      return;
+    }
+
+    setIsCreatingTask(true);
+    setCreateTaskError(null);
+
+    try {
+      const createdTask = await createTask({
+        title: newTask.title.trim(),
+        description: newTask.description.trim() || undefined,
+        projectId: newTask.projectId,
+        priority: newTask.priority,
+        assigneeId: newTask.assigneeId || null,
+        dueDate: newTask.dueDate
+          ? new Date(`${newTask.dueDate}T00:00:00.000Z`).toISOString()
+          : null,
+        status: "Backlog",
+        type: newTask.type,
+      }).unwrap();
+
+      syncTaskIntoBoard(createdTask);
+      setIsComposerOpen(false);
+      setNewTask((current) => ({
+        ...current,
+        title: "",
+        description: "",
+        assigneeId: "",
+        dueDate: "",
+        type: "Feature",
+      }));
+    } catch (error) {
+      console.error("Failed to create task", error);
+      setCreateTaskError("We couldn't create that task. Please try again.");
+    } finally {
+      setIsCreatingTask(false);
+    }
+  };
+
+  if (status === "loading") {
+    return (
+      <div className="rounded-[2rem] border border-white/60 bg-white/70 p-8 text-sm text-slate-500 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.25)] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/75 dark:text-slate-300">
+        Syncing your workspace session...
+      </div>
+    );
+  }
+
+  if (status === "authenticated" && !session?.accessToken) {
+    return (
+      <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-8 text-sm text-amber-900 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.25)] dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+        Your dashboard session is active, but the API token has not finished syncing yet. Refresh once, or sign in again if task updates stay locked.
+      </div>
+    );
+  }
+
+  if (!sessionReady) {
+    return (
+      <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-8 text-sm text-amber-900 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.25)] dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+        Sign in to load live projects and move tasks across the board.
+      </div>
+    );
+  }
+
   return (
     <>
+      <div className="mb-5 flex flex-col gap-3 rounded-[2rem] border border-white/60 bg-white/70 p-4 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.2)] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/75 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+            Weekly execution
+          </p>
+          <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
+            Move work forward and add new tasks without leaving the board.
+          </h3>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsComposerOpen((current) => !current)}
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+        >
+          <Plus size={16} />
+          New task
+        </button>
+      </div>
+
+      {isComposerOpen ? (
+        <form
+          onSubmit={handleCreateTask}
+          className="mb-6 grid gap-4 rounded-[2rem] border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.25)] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/75 md:grid-cols-2"
+        >
+          <label className="space-y-2 md:col-span-2">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Task title
+            </span>
+            <input
+              value={newTask.title}
+              onChange={(event) =>
+                setNewTask((current) => ({
+                  ...current,
+                  title: event.target.value,
+                }))
+              }
+              className="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              placeholder="Add a clear task title"
+              required
+            />
+          </label>
+          <label className="space-y-2 md:col-span-2">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Description
+            </span>
+            <textarea
+              value={newTask.description}
+              onChange={(event) =>
+                setNewTask((current) => ({
+                  ...current,
+                  description: event.target.value,
+                }))
+              }
+              className="min-h-28 w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              placeholder="Capture the outcome, context, or handoff notes"
+            />
+          </label>
+          <label className="space-y-2">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Project
+            </span>
+            <select
+              value={newTask.projectId}
+              onChange={(event) =>
+                setNewTask((current) => ({
+                  ...current,
+                  projectId: Number(event.target.value),
+                }))
+              }
+              className="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            >
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-2">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Assignee
+            </span>
+            <select
+              value={newTask.assigneeId}
+              onChange={(event) =>
+                setNewTask((current) => ({
+                  ...current,
+                  assigneeId: event.target.value,
+                }))
+              }
+              className="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            >
+              <option value="">Unassigned</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name ?? user.email}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-2">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Priority
+            </span>
+            <select
+              value={newTask.priority}
+              onChange={(event) =>
+                setNewTask((current) => ({
+                  ...current,
+                  priority: event.target.value,
+                }))
+              }
+              className="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            >
+              <option>Low</option>
+              <option>Medium</option>
+              <option>High</option>
+            </select>
+          </label>
+          <label className="space-y-2">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Type
+            </span>
+            <select
+              value={newTask.type}
+              onChange={(event) =>
+                setNewTask((current) => ({
+                  ...current,
+                  type: event.target.value,
+                }))
+              }
+              className="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            >
+              <option>Feature</option>
+              <option>Bugfix</option>
+              <option>Design System</option>
+              <option>Infrastructure</option>
+            </select>
+          </label>
+          <label className="space-y-2 md:col-span-2">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Due date
+            </span>
+            <input
+              type="date"
+              value={newTask.dueDate}
+              onChange={(event) =>
+                setNewTask((current) => ({
+                  ...current,
+                  dueDate: event.target.value,
+                }))
+              }
+              className="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            />
+          </label>
+          {createTaskError ? (
+            <p className="md:col-span-2 text-sm font-medium text-rose-600 dark:text-rose-300">
+              {createTaskError}
+            </p>
+          ) : null}
+          <div className="flex flex-col gap-3 md:col-span-2 md:flex-row md:justify-end">
+            <button
+              type="button"
+              onClick={() => setIsComposerOpen(false)}
+              className="rounded-full border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isCreatingTask}
+              className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+            >
+              {isCreatingTask ? "Creating..." : "Create task"}
+            </button>
+          </div>
+        </form>
+      ) : null}
+
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {columns.map((column) => (
@@ -404,6 +695,7 @@ export default function HomeBoard() {
       <TaskDetailsSheet
         isOpen={Boolean(selectedTask)}
         task={selectedTask}
+        currentUserId={session?.user.id ?? null}
         onClose={() => setSelectedTaskId(null)}
         onTaskChange={handleTaskChange}
       />

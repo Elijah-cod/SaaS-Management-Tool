@@ -11,6 +11,7 @@ import type {
   Team,
   User,
 } from "@/types";
+import type { RootState } from "@/lib/store";
 
 const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
@@ -20,12 +21,20 @@ const shouldUseMockData = (error: FetchBaseQueryError | undefined) =>
 
 const baseQuery = fetchBaseQuery({
   baseUrl: apiBaseUrl,
-  prepareHeaders: (headers) => {
+  prepareHeaders: (headers, { getState }) => {
+    const state = getState() as RootState;
+    const token =
+      state.global.accessToken ??
+      (typeof window !== "undefined"
+        ? window.localStorage.getItem("accessToken")
+        : null);
+
+    if (token) {
+      headers.set("authorization", `Bearer ${token}`);
+    }
+
     if (typeof window !== "undefined") {
-      const token = window.localStorage.getItem("accessToken");
-      if (token) {
-        headers.set("authorization", `Bearer ${token}`);
-      }
+      headers.set("x-client-origin", window.location.origin);
     }
 
     return headers;
@@ -55,6 +64,22 @@ export const api = createApi({
     createProject: build.mutation<Project, Partial<Project>>({
       query: (body) => ({ url: "projects", method: "POST", body }),
       invalidatesTags: ["Projects"],
+    }),
+    createTask: build.mutation<
+      Task,
+      {
+        title: string;
+        description?: string;
+        projectId: number;
+        status?: string;
+        priority?: string;
+        dueDate?: string | null;
+        assigneeId?: string | null;
+        type?: string;
+      }
+    >({
+      query: (body) => ({ url: "tasks", method: "POST", body }),
+      invalidatesTags: ["Tasks", "Projects"],
     }),
     getTasks: build.query<Task[], { projectId?: number } | void>({
       async queryFn(arg, _api, _extraOptions, fetchWithBQ) {
@@ -185,6 +210,7 @@ export const {
   useGetProjectsQuery,
   useCreateProjectMutation,
   useGetTasksQuery,
+  useCreateTaskMutation,
   useUpdateTaskStatusMutation,
   useUpdateTaskAssigneeMutation,
   useCreateTaskCommentMutation,

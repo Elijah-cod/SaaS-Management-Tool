@@ -3,23 +3,30 @@
 import { useEffect, useState } from "react";
 import { SessionProvider, useSession } from "next-auth/react";
 import { Provider } from "react-redux";
+import { setAccessToken, setAuthStatus } from "@/app/state";
+import { useAppDispatch } from "@/lib/hooks";
 import { makeStore } from "@/lib/store";
 
 function SessionTokenBridge() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
+    dispatch(setAuthStatus(status));
+
     if (typeof window === "undefined") {
       return;
     }
 
     if (session?.accessToken) {
+      dispatch(setAccessToken(session.accessToken));
       window.localStorage.setItem("accessToken", session.accessToken);
       return;
     }
 
+    dispatch(setAccessToken(null));
     window.localStorage.removeItem("accessToken");
-  }, [session?.accessToken]);
+  }, [dispatch, session?.accessToken, status]);
 
   return null;
 }
@@ -33,8 +40,10 @@ export default function StoreProvider({
 
   return (
     <SessionProvider>
-      <SessionTokenBridge />
-      <Provider store={store}>{children}</Provider>
+      <Provider store={store}>
+        <SessionTokenBridge />
+        {children}
+      </Provider>
     </SessionProvider>
   );
 }

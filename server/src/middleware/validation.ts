@@ -144,6 +144,86 @@ export const validateTaskStatusBody: Validator<{ status: string }> = (value) => 
   };
 };
 
+export const validateCreateTaskBody: Validator<{
+  title: string;
+  description?: string;
+  projectId: number;
+  status?: string;
+  priority?: string;
+  dueDate?: string | null;
+  assigneeId?: string | null;
+  type?: string;
+}> = (value) => {
+  if (!isRecord(value)) {
+    return { success: false, errors: ["Request body must be an object"] };
+  }
+
+  const title = typeof value.title === "string" ? value.title.trim() : "";
+  const description =
+    typeof value.description === "string" ? value.description.trim() : undefined;
+  const projectId =
+    typeof value.projectId === "number"
+      ? value.projectId
+      : Number(value.projectId);
+  const status =
+    typeof value.status === "string" ? value.status.trim() : undefined;
+  const priority =
+    typeof value.priority === "string" ? value.priority.trim() : undefined;
+  const dueDate =
+    value.dueDate === null
+      ? null
+      : typeof value.dueDate === "string"
+        ? value.dueDate.trim()
+        : undefined;
+  const assigneeId =
+    value.assigneeId === null
+      ? null
+      : typeof value.assigneeId === "string"
+        ? value.assigneeId.trim()
+        : undefined;
+  const type = typeof value.type === "string" ? value.type.trim() : undefined;
+
+  const errors = [];
+
+  if (!title) {
+    errors.push("title is required");
+  }
+
+  if (!Number.isInteger(projectId) || projectId <= 0) {
+    errors.push("projectId must be a positive integer");
+  }
+
+  if (status && !isTaskStatus(status)) {
+    errors.push("status must be Backlog, In Progress, Review, or Completed");
+  }
+
+  if (dueDate && !isIsoDate(dueDate)) {
+    errors.push("dueDate must be a valid ISO date");
+  }
+
+  if (assigneeId !== undefined && assigneeId !== null && !/^u\d+$/.test(assigneeId)) {
+    errors.push("assigneeId must be null or a user id like u12");
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return {
+    success: true,
+    data: {
+      title,
+      description,
+      projectId,
+      status,
+      priority,
+      dueDate,
+      assigneeId,
+      type,
+    },
+  };
+};
+
 export const validateTaskAssigneeBody: Validator<{
   assigneeId: string | null;
 }> = (value) => {

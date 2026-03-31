@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  createTask,
   createTaskAttachment,
   createTaskComment,
   getTasks,
@@ -9,6 +10,7 @@ import {
 import { requireAuth, requireRole } from "../middleware/auth";
 import {
   validateBody,
+  validateCreateTaskBody,
   validateTaskAssigneeBody,
   validateTaskAttachmentBody,
   validateTaskCommentBody,
@@ -18,6 +20,18 @@ import {
 const router = Router();
 
 router.get("/", requireAuth, getTasks);
+router.post(
+  "/",
+  requireAuth,
+  requireRole(
+    "Product Manager",
+    "Frontend Engineer",
+    "Designer",
+    "Operations Lead"
+  ),
+  validateBody(validateCreateTaskBody),
+  createTask
+);
 router.patch(
   "/:taskId/status",
   requireAuth,

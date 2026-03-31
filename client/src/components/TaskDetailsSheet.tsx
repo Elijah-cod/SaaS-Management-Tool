@@ -9,6 +9,7 @@ import type { Task, TaskAttachment, TaskComment, User } from "@/types";
 interface TaskDetailsSheetProps {
   isOpen: boolean;
   task: Task | null;
+  currentUserId: string | null;
   onClose: () => void;
   onTaskChange: (task: Task) => void;
 }
@@ -34,11 +35,13 @@ const getInitials = (user?: User) =>
 export default function TaskDetailsSheet({
   isOpen,
   task,
+  currentUserId,
   onClose,
   onTaskChange,
 }: TaskDetailsSheetProps) {
   const [commentBody, setCommentBody] = useState("");
-  const { data: users = mockUsers } = useGetUsersQuery();
+  const { data: usersData } = useGetUsersQuery();
+  const users = usersData ?? mockUsers;
 
   const creator = useMemo(
     () => users.find((user) => user.id === task?.createdById),
@@ -67,7 +70,7 @@ export default function TaskDetailsSheet({
 
     const nextComment: TaskComment = {
       id: `comment-${Date.now()}`,
-      authorId: "u1",
+      authorId: currentUserId ?? task.createdById ?? "u1",
       body: trimmed,
       createdAt: new Date().toISOString(),
     };
@@ -88,7 +91,7 @@ export default function TaskDetailsSheet({
       id: `attachment-${Date.now()}-${file.name}`,
       name: file.name,
       sizeLabel: `${Math.max(1, Math.round(file.size / 1024))} KB`,
-      addedById: "u1",
+      addedById: currentUserId ?? task.createdById ?? "u1",
       addedAt: new Date().toISOString(),
     }));
 

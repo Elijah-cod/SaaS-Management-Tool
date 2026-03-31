@@ -8,6 +8,7 @@ import {
   type DropResult,
 } from "@hello-pangea/dnd";
 import { GripVertical, Plus } from "lucide-react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import TaskDetailsSheet from "@/components/TaskDetailsSheet";
 import {
@@ -380,15 +381,32 @@ export default function HomeBoard() {
         </div>
         <button
           type="button"
+          disabled={projects.length === 0}
           onClick={() => setIsComposerOpen((current) => !current)}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
         >
           <Plus size={16} />
           New task
         </button>
       </div>
 
-      {isComposerOpen ? (
+      {projects.length === 0 ? (
+        <div className="mb-6 rounded-[2rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+          <p className="font-semibold">Create a project before adding tasks.</p>
+          <p className="mt-1">
+            This workspace does not have any projects yet, so new tasks do not
+            have a valid destination.
+          </p>
+          <Link
+            href="/projects"
+            className="mt-3 inline-flex items-center rounded-full border border-amber-300 px-4 py-2 font-semibold transition hover:bg-amber-100 dark:border-amber-800 dark:hover:bg-amber-900/40"
+          >
+            Go to Projects
+          </Link>
+        </div>
+      ) : null}
+
+      {isComposerOpen && projects.length > 0 ? (
         <form
           onSubmit={handleCreateTask}
           className="mb-6 grid gap-4 rounded-[2rem] border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.25)] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/75 md:grid-cols-2"

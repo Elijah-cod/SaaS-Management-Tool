@@ -1,12 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { ArrowRight, FolderKanban } from "lucide-react";
 import ProjectsDataGrid from "@/components/ProjectsDataGrid";
-import { useGetProjectsQuery } from "@/app/state/api";
+import {
+  useCreateProjectMutation,
+  useGetProjectsQuery,
+} from "@/app/state/api";
 
 export default function ProjectsPage() {
   const { data: projects = [], isLoading, isFetching } = useGetProjectsQuery();
+  const [createProject] = useCreateProjectMutation();
+  const [projectName, setProjectName] = useState("");
+  const [projectDescription, setProjectDescription] = useState("");
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [createProjectError, setCreateProjectError] = useState<string | null>(
+    null
+  );
 
   const activeProjects = projects.filter(
     (project) => project.status !== "Completed"
@@ -14,6 +25,32 @@ export default function ProjectsPage() {
   const completedProjects = projects.filter(
     (project) => project.status === "Completed"
   ).length;
+
+  const handleCreateProject = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!projectName.trim()) {
+      return;
+    }
+
+    setIsCreatingProject(true);
+    setCreateProjectError(null);
+
+    try {
+      await createProject({
+        name: projectName.trim(),
+        description: projectDescription.trim() || undefined,
+      }).unwrap();
+
+      setProjectName("");
+      setProjectDescription("");
+    } catch (error) {
+      console.error("Failed to create project", error);
+      setCreateProjectError("We couldn't create that project. Please try again.");
+    } finally {
+      setIsCreatingProject(false);
+    }
+  };
 
   return (
     <section className="space-y-6">
@@ -65,6 +102,49 @@ export default function ProjectsPage() {
           <p className="mt-3 text-2xl font-semibold">{completedProjects}</p>
         </article>
       </div>
+
+      <form
+        onSubmit={handleCreateProject}
+        className="grid gap-4 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:grid-cols-[1.2fr_1.8fr_auto]"
+      >
+        <label className="space-y-2">
+          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Project name
+          </span>
+          <input
+            value={projectName}
+            onChange={(event) => setProjectName(event.target.value)}
+            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            placeholder="Client Portal Redesign"
+            required
+          />
+        </label>
+        <label className="space-y-2">
+          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Description
+          </span>
+          <input
+            value={projectDescription}
+            onChange={(event) => setProjectDescription(event.target.value)}
+            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            placeholder="Summarize the scope, objective, or delivery goal"
+          />
+        </label>
+        <div className="flex items-end">
+          <button
+            type="submit"
+            disabled={isCreatingProject}
+            className="inline-flex w-full items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+          >
+            {isCreatingProject ? "Creating..." : "Create project"}
+          </button>
+        </div>
+        {createProjectError ? (
+          <p className="text-sm font-medium text-rose-600 dark:text-rose-300 lg:col-span-3">
+            {createProjectError}
+          </p>
+        ) : null}
+      </form>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">

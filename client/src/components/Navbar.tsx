@@ -21,7 +21,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 
 export default function Navbar() {
   const dispatch = useAppDispatch();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode);
   const isSidebarCollapsed = useAppSelector(
     (state) => state.global.isSidebarCollapsed
@@ -64,10 +64,14 @@ export default function Navbar() {
         <div className="flex items-center gap-2 md:gap-3">
           <div className="hidden text-right md:block">
             <p className="text-sm font-semibold text-slate-900 dark:text-white">
-              {session?.user.name ?? "Workspace user"}
+              {status === "loading"
+                ? "Loading workspace..."
+                : session?.user.name ?? "Workspace user"}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {session?.user.role ?? "Signed in"}
+              {status === "loading"
+                ? "Syncing session"
+                : session?.user.role ?? "Signed in"}
             </p>
           </div>
           <Link

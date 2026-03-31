@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Session } from "next-auth";
 import { SessionProvider, useSession } from "next-auth/react";
 import { Provider } from "react-redux";
 import { setAccessToken, setAuthStatus } from "@/app/state";
@@ -32,14 +33,16 @@ function SessionTokenBridge() {
 }
 
 export default function StoreProvider({
+  session,
   children,
 }: {
+  session: Session | null;
   children: React.ReactNode;
 }) {
   const [store] = useState(makeStore);
 
   return (
-    <SessionProvider>
+    <SessionProvider session={session}>
       <Provider store={store}>
         <SessionTokenBridge />
         {children}

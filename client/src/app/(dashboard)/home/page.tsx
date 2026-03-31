@@ -35,16 +35,16 @@ export default function HomePage() {
   ];
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-5 md:space-y-6">
       <div className="overflow-hidden rounded-[2rem] border border-white/60 bg-white/70 shadow-[0_24px_80px_-28px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/75">
-        <div className="flex flex-col gap-8 p-6 md:p-8 xl:flex-row xl:items-end xl:justify-between">
+        <div className="flex flex-col gap-6 p-5 sm:p-6 md:p-8 xl:flex-row xl:items-end xl:justify-between">
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-sky-700 dark:border-sky-900 dark:bg-sky-950/60 dark:text-sky-300">
               Home Board
               <MoveRight size={14} />
             </div>
             <div className="space-y-3">
-              <h2 className="max-w-3xl text-3xl font-semibold tracking-tight text-slate-950 dark:text-white md:text-4xl">
+              <h2 className="max-w-3xl text-2xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-3xl md:text-4xl">
                 Delivery board built for momentum, not just status reporting.
               </h2>
               <p className="max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 md:text-base">
@@ -55,21 +55,21 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex w-full flex-col gap-3 xl:w-auto xl:min-w-[24rem]">
             <Link
               href="/projects"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
             >
               View all projects
               <ArrowRight size={16} />
             </Link>
-            <div className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white/70 px-5 py-3 text-sm font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-300">
+            <div className="inline-flex w-full items-center justify-center rounded-full border border-slate-200 bg-white/70 px-5 py-3 text-center text-sm font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-300">
               Drag cards between lanes to reprioritize
             </div>
           </div>
         </div>
 
-        <div className="grid gap-3 border-t border-white/70 bg-slate-50/60 p-4 dark:border-slate-800/80 dark:bg-slate-950/30 md:grid-cols-3 md:p-6">
+        <div className="grid gap-3 border-t border-white/70 bg-slate-50/60 p-4 dark:border-slate-800/80 dark:bg-slate-950/30 sm:grid-cols-2 xl:grid-cols-3 md:p-6">
           {stats.map((stat) => (
             <article
               key={stat.label}

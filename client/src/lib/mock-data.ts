@@ -63,6 +63,26 @@ export const mockTasks: Task[] = [
     dueDate: "2026-04-03",
     type: "Feature",
     ticket: "FE-091",
+    createdById: "u1",
+    description:
+      "Create a shared drag state pattern so cards can move predictably across lanes and survive interaction edge cases.",
+    attachments: [
+      {
+        id: "att-101",
+        name: "drag-state-outline.pdf",
+        sizeLabel: "1.2 MB",
+        addedById: "u1",
+        addedAt: "2026-03-30T08:00:00.000Z",
+      },
+    ],
+    comments: [
+      {
+        id: "com-101",
+        authorId: "u3",
+        body: "Let’s keep the state shape small so we can sync it later with the API without a big refactor.",
+        createdAt: "2026-03-31T07:45:00.000Z",
+      },
+    ],
   },
   {
     id: 102,
@@ -75,6 +95,11 @@ export const mockTasks: Task[] = [
     dueDate: "2026-04-09",
     type: "Infrastructure",
     ticket: "FE-092",
+    createdById: "u4",
+    description:
+      "Support a reliable offline draft layer so task movement and updates can recover when connectivity drops.",
+    attachments: [],
+    comments: [],
   },
   {
     id: 103,
@@ -87,6 +112,26 @@ export const mockTasks: Task[] = [
     dueDate: "2026-04-14",
     type: "Feature",
     ticket: "FE-088",
+    createdById: "u1",
+    description:
+      "Wrap optimistic task updates so the UI feels immediate while server synchronization happens in the background.",
+    attachments: [
+      {
+        id: "att-103",
+        name: "optimistic-flow.fig",
+        sizeLabel: "860 KB",
+        addedById: "u3",
+        addedAt: "2026-03-31T09:10:00.000Z",
+      },
+    ],
+    comments: [
+      {
+        id: "com-103",
+        authorId: "u2",
+        body: "I’ll wire this into the RTK Query mutation path once the server update endpoint is ready.",
+        createdAt: "2026-03-31T09:25:00.000Z",
+      },
+    ],
   },
   {
     id: 104,
@@ -99,6 +144,18 @@ export const mockTasks: Task[] = [
     dueDate: "2026-04-05",
     type: "Bugfix",
     ticket: "FE-089",
+    createdById: "u4",
+    description:
+      "Prevent duplicate state writes when multiple drag events fire quickly during rapid user interaction.",
+    attachments: [],
+    comments: [
+      {
+        id: "com-104",
+        authorId: "u1",
+        body: "This one is blocking smooth demos, so let’s keep it visible in the active lane.",
+        createdAt: "2026-03-31T10:00:00.000Z",
+      },
+    ],
   },
   {
     id: 105,
@@ -111,6 +168,11 @@ export const mockTasks: Task[] = [
     dueDate: "2026-04-07",
     type: "Design System",
     ticket: "FE-085",
+    createdById: "u3",
+    description:
+      "Review visual consistency before handoff so the board feels intentional across desktop and tablet breakpoints.",
+    attachments: [],
+    comments: [],
   },
 ];
 

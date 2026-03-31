@@ -27,12 +27,12 @@ export default function DashboardLayout({
     <div className="flex min-h-screen w-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white">
       <Sidebar />
       <main
-        className={`flex w-full flex-col bg-slate-50 transition-[padding] duration-200 dark:bg-slate-950 ${
+        className={`flex min-w-0 w-full flex-col bg-slate-50 transition-[padding] duration-200 dark:bg-slate-950 ${
           isSidebarCollapsed ? "md:pl-20" : "md:pl-64"
         }`}
       >
         <Navbar />
-        <div className="flex-1 p-4 md:p-6">{children}</div>
+        <div className="flex-1 p-3 sm:p-4 md:p-6">{children}</div>
       </main>
     </div>
   );

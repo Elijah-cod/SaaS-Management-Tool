@@ -37,10 +37,29 @@ export interface Task {
   type?: string;
   ticket?: string;
   assigneeIds?: string[];
+  createdById?: string;
+  description?: string;
+  attachments?: TaskAttachment[];
+  comments?: TaskComment[];
 }
 
 export interface DashboardStat {
   label: string;
   value: string;
   helperText: string;
+}
+
+export interface TaskAttachment {
+  id: string;
+  name: string;
+  sizeLabel: string;
+  addedById: string;
+  addedAt: string;
+}
+
+export interface TaskComment {
+  id: string;
+  authorId: string;
+  body: string;
+  createdAt: string;
 }

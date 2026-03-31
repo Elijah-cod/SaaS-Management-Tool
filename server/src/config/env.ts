@@ -18,6 +18,12 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: Number(process.env.PORT ?? "4000"),
   databaseUrl: requireEnv("DATABASE_URL", process.env.NODE_ENV === "production" ? undefined : "postgresql://postgres:postgres@localhost:5432/project_management?schema=public"),
+  apiAuthSecret: requireEnv(
+    "API_AUTH_SECRET",
+    process.env.NODE_ENV === "production"
+      ? undefined
+      : "development-api-auth-secret"
+  ),
   clientOrigins: parseClientOrigins(
     requireEnv(
       "CLIENT_URL",

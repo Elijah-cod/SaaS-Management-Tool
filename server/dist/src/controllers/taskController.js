@@ -134,16 +134,19 @@ const updateTaskAssignee = async (req, res) => {
 exports.updateTaskAssignee = updateTaskAssignee;
 const createTaskComment = async (req, res) => {
     const taskId = Number(req.params.taskId);
-    const { authorId, body } = req.body;
-    if (!authorId || !body) {
-        return res.status(400).json({ message: "authorId and body are required" });
+    const { body } = req.body;
+    if (!req.authUser) {
+        return res.status(401).json({ message: "Authentication required" });
+    }
+    if (!body) {
+        return res.status(400).json({ message: "body is required" });
     }
     try {
         await prisma_1.prisma.comment.create({
             data: {
                 taskId,
                 text: body,
-                userId: Number(authorId.replace("u", "")),
+                userId: req.authUser.userId,
             },
         });
         const serializedTask = await serializeTask(taskId);
@@ -156,9 +159,12 @@ const createTaskComment = async (req, res) => {
 exports.createTaskComment = createTaskComment;
 const createTaskAttachment = async (req, res) => {
     const taskId = Number(req.params.taskId);
-    const { addedById, name, sizeLabel, } = req.body;
-    if (!addedById || !name) {
-        return res.status(400).json({ message: "addedById and name are required" });
+    const { name, sizeLabel } = req.body;
+    if (!req.authUser) {
+        return res.status(401).json({ message: "Authentication required" });
+    }
+    if (!name) {
+        return res.status(400).json({ message: "name is required" });
     }
     try {
         await prisma_1.prisma.attachment.create({
@@ -166,7 +172,7 @@ const createTaskAttachment = async (req, res) => {
                 taskId,
                 fileName: name,
                 fileUrl: `uploads/${name}`,
-                uploadedById: Number(addedById.replace("u", "")),
+                uploadedById: req.authUser.userId,
             },
         });
         const serializedTask = await serializeTask(taskId);

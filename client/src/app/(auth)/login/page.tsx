@@ -29,14 +29,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
 
         <div className="mt-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-100">
-          <p className="font-semibold">Demo account</p>
-          <p className="mt-1">Email: demo@saasmanager.app</p>
+          <p className="font-semibold">Seeded workspace account</p>
+          <p className="mt-1">Email: amina@saasmanager.app</p>
           <p>Password: ChangeMe123!</p>
         </div>
 
         {hasCredentialsError ? (
           <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
-            We couldn&apos;t sign you in with those credentials. Try the demo account or update the auth env values.
+            We couldn&apos;t sign you in with those credentials. Try one of the seeded workspace users after running the latest database migration and seed.
           </div>
         ) : null}
 

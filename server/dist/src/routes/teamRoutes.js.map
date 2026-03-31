@@ -1,1 +1,1 @@
-{"version":3,"file":"teamRoutes.js","sourceRoot":"","sources":["../../../src/routes/teamRoutes.ts"],"names":[],"mappings":";;AAAA,qCAAiC;AACjC,kEAAyD;AAEzD,MAAM,MAAM,GAAG,IAAA,gBAAM,GAAE,CAAC;AAExB,MAAM,CAAC,GAAG,CAAC,GAAG,EAAE,yBAAQ,CAAC,CAAC;AAE1B,kBAAe,MAAM,CAAC"}
+{"version":3,"file":"teamRoutes.js","sourceRoot":"","sources":["../../../src/routes/teamRoutes.ts"],"names":[],"mappings":";;AAAA,qCAAiC;AACjC,kEAAyD;AACzD,6CAAiD;AAEjD,MAAM,MAAM,GAAG,IAAA,gBAAM,GAAE,CAAC;AAExB,MAAM,CAAC,GAAG,CAAC,GAAG,EAAE,kBAAW,EAAE,yBAAQ,CAAC,CAAC;AAEvC,kBAAe,MAAM,CAAC"}

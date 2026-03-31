@@ -1,1 +1,1 @@
-{"version":3,"file":"searchRoutes.js","sourceRoot":"","sources":["../../../src/routes/searchRoutes.ts"],"names":[],"mappings":";;AAAA,qCAAiC;AACjC,sEAAkE;AAElE,MAAM,MAAM,GAAG,IAAA,gBAAM,GAAE,CAAC;AAExB,MAAM,CAAC,GAAG,CAAC,GAAG,EAAE,kCAAe,CAAC,CAAC;AAEjC,kBAAe,MAAM,CAAC"}
+{"version":3,"file":"searchRoutes.js","sourceRoot":"","sources":["../../../src/routes/searchRoutes.ts"],"names":[],"mappings":";;AAAA,qCAAiC;AACjC,sEAAkE;AAClE,6CAAiD;AAEjD,MAAM,MAAM,GAAG,IAAA,gBAAM,GAAE,CAAC;AAExB,MAAM,CAAC,GAAG,CAAC,GAAG,EAAE,kBAAW,EAAE,kCAAe,CAAC,CAAC;AAE9C,kBAAe,MAAM,CAAC"}

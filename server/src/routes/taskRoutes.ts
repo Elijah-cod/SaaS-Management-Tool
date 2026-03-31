@@ -6,13 +6,54 @@ import {
   updateTaskAssignee,
   updateTaskStatus,
 } from "../controllers/taskController";
+import { requireAuth, requireRole } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/", getTasks);
-router.patch("/:taskId/status", updateTaskStatus);
-router.patch("/:taskId/assignee", updateTaskAssignee);
-router.post("/:taskId/comments", createTaskComment);
-router.post("/:taskId/attachments", createTaskAttachment);
+router.get("/", requireAuth, getTasks);
+router.patch(
+  "/:taskId/status",
+  requireAuth,
+  requireRole(
+    "Product Manager",
+    "Frontend Engineer",
+    "Designer",
+    "Operations Lead"
+  ),
+  updateTaskStatus
+);
+router.patch(
+  "/:taskId/assignee",
+  requireAuth,
+  requireRole(
+    "Product Manager",
+    "Frontend Engineer",
+    "Designer",
+    "Operations Lead"
+  ),
+  updateTaskAssignee
+);
+router.post(
+  "/:taskId/comments",
+  requireAuth,
+  requireRole(
+    "Product Manager",
+    "Frontend Engineer",
+    "Designer",
+    "Operations Lead"
+  ),
+  createTaskComment
+);
+router.post(
+  "/:taskId/attachments",
+  requireAuth,
+  requireRole(
+    "Product Manager",
+    "Frontend Engineer",
+    "Designer",
+    "Operations Lead"
+  ),
+  createTaskAttachment
+);
 
 export default router;

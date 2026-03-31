@@ -1,4 +1,8 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import {
+  createApi,
+  fetchBaseQuery,
+  type FetchBaseQueryError,
+} from "@reduxjs/toolkit/query/react";
 import { mockProjects, mockTasks, mockTeams, mockUsers } from "@/lib/mock-data";
 import type {
   Project,
@@ -10,6 +14,9 @@ import type {
 
 const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+
+const shouldUseMockData = (error: FetchBaseQueryError | undefined) =>
+  process.env.NODE_ENV !== "production" && error?.status === "FETCH_ERROR";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: apiBaseUrl,
@@ -33,8 +40,12 @@ export const api = createApi({
     getProjects: build.query<Project[], void>({
       async queryFn(_arg, _api, _extraOptions, fetchWithBQ) {
         const result = await fetchWithBQ("projects");
-        if (result.error) {
+        if (shouldUseMockData(result.error as FetchBaseQueryError | undefined)) {
           return { data: mockProjects };
+        }
+
+        if (result.error) {
+          return { error: result.error };
         }
 
         return { data: (result.data as Project[]) ?? mockProjects };
@@ -52,13 +63,17 @@ export const api = createApi({
           projectId ? `tasks?projectId=${projectId}` : "tasks"
         );
 
-        if (result.error) {
+        if (shouldUseMockData(result.error as FetchBaseQueryError | undefined)) {
           return {
             data:
               projectId === undefined
                 ? mockTasks
                 : mockTasks.filter((task) => task.projectId === projectId),
           };
+        }
+
+        if (result.error) {
+          return { error: result.error };
         }
 
         const tasks = (result.data as Task[]) ?? mockTasks;
@@ -136,8 +151,12 @@ export const api = createApi({
     getUsers: build.query<User[], void>({
       async queryFn(_arg, _api, _extraOptions, fetchWithBQ) {
         const result = await fetchWithBQ("users");
-        if (result.error) {
+        if (shouldUseMockData(result.error as FetchBaseQueryError | undefined)) {
           return { data: mockUsers };
+        }
+
+        if (result.error) {
+          return { error: result.error };
         }
 
         return { data: (result.data as User[]) ?? mockUsers };
@@ -147,8 +166,12 @@ export const api = createApi({
     getTeams: build.query<Team[], void>({
       async queryFn(_arg, _api, _extraOptions, fetchWithBQ) {
         const result = await fetchWithBQ("teams");
-        if (result.error) {
+        if (shouldUseMockData(result.error as FetchBaseQueryError | undefined)) {
           return { data: mockTeams };
+        }
+
+        if (result.error) {
+          return { error: result.error };
         }
 
         return { data: (result.data as Team[]) ?? mockTeams };

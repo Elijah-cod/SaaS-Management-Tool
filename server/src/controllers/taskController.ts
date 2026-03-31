@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
+import type { AuthenticatedRequest } from "../middleware/auth";
 
 const serializeTask = async (taskId: number) => {
   const task = await prisma.task.findUnique({
@@ -142,12 +143,19 @@ export const updateTaskAssignee = async (req: Request, res: Response) => {
   }
 };
 
-export const createTaskComment = async (req: Request, res: Response) => {
+export const createTaskComment = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
   const taskId = Number(req.params.taskId);
-  const { authorId, body } = req.body as { authorId?: string; body?: string };
+  const { body } = req.body as { body?: string };
 
-  if (!authorId || !body) {
-    return res.status(400).json({ message: "authorId and body are required" });
+  if (!req.authUser) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+
+  if (!body) {
+    return res.status(400).json({ message: "body is required" });
   }
 
   try {
@@ -155,7 +163,7 @@ export const createTaskComment = async (req: Request, res: Response) => {
       data: {
         taskId,
         text: body,
-        userId: Number(authorId.replace("u", "")),
+        userId: req.authUser.userId,
       },
     });
 
@@ -166,16 +174,22 @@ export const createTaskComment = async (req: Request, res: Response) => {
   }
 };
 
-export const createTaskAttachment = async (req: Request, res: Response) => {
+export const createTaskAttachment = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
   const taskId = Number(req.params.taskId);
-  const {
-    addedById,
-    name,
-    sizeLabel,
-  } = req.body as { addedById?: string; name?: string; sizeLabel?: string };
+  const { name, sizeLabel } = req.body as {
+    name?: string;
+    sizeLabel?: string;
+  };
 
-  if (!addedById || !name) {
-    return res.status(400).json({ message: "addedById and name are required" });
+  if (!req.authUser) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+
+  if (!name) {
+    return res.status(400).json({ message: "name is required" });
   }
 
   try {
@@ -184,7 +198,7 @@ export const createTaskAttachment = async (req: Request, res: Response) => {
         taskId,
         fileName: name,
         fileUrl: `uploads/${name}`,
-        uploadedById: Number(addedById.replace("u", "")),
+        uploadedById: req.authUser.userId,
       },
     });
 

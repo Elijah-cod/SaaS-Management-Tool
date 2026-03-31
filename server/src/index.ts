@@ -5,6 +5,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import type { NextFunction, Request, Response } from "express";
 import { env } from "./config/env";
+import authRoutes from "./routes/authRoutes";
 import projectRoutes from "./routes/projectRoutes";
 import searchRoutes from "./routes/searchRoutes";
 import taskRoutes from "./routes/taskRoutes";
@@ -46,6 +47,7 @@ app.get("/health", (_req, res) => {
   });
 });
 
+app.use("/auth", authRoutes);
 app.use("/projects", projectRoutes);
 app.use("/tasks", taskRoutes);
 app.use("/users", userRoutes);

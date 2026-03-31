@@ -46,10 +46,6 @@ Create [client/.env.local](/Users/elijah/Documents/Projects/SaaS-Management-Tool
 ```env
 NEXT_PUBLIC_API_BASE_URL="http://localhost:4000"
 AUTH_SECRET="replace-with-a-long-random-string"
-DEMO_USER_EMAIL="demo@saasmanager.app"
-DEMO_USER_PASSWORD="ChangeMe123!"
-DEMO_USER_NAME="Jordan Lee"
-DEMO_USER_ROLE="Product Manager"
 ```
 
 Example file: [client/.env.local.example](/Users/elijah/Documents/Projects/SaaS-Management-Tool/client/.env.local.example)
@@ -62,6 +58,7 @@ Create `server/.env` from [server/.env.example](/Users/elijah/Documents/Projects
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/project_management?schema=public"
 PORT=4000
 CLIENT_URL="http://localhost:3000"
+API_AUTH_SECRET="replace-with-a-long-random-string"
 NODE_ENV="development"
 ```
 
@@ -108,12 +105,14 @@ cd client
 npm run dev
 ```
 
-Open `http://localhost:3000/home`.
+Open `http://localhost:3000/login`.
 
-To sign in locally, use the credentials from `client/.env.local`. The default demo login is:
+After seeding the database, sign in with one of the seeded workspace users:
 
-- `demo@saasmanager.app`
-- `ChangeMe123!`
+- `amina@saasmanager.app` / `ChangeMe123!`
+- `daniel@saasmanager.app` / `ChangeMe123!`
+- `lina@saasmanager.app` / `ChangeMe123!`
+- `musa@saasmanager.app` / `ChangeMe123!`
 
 ## Useful Commands
 
@@ -168,12 +167,13 @@ Already in place:
 - typed client and server build/typecheck commands
 - separate frontend/backend env files
 - backend-backed task board interactions
-- NextAuth credentials-based login with environment-configured demo user
+- persisted Prisma-backed users with hashed passwords
+- NextAuth credentials login backed by the Express auth API
+- bearer-token protection on dashboard API routes
+- role-based authorization on write actions
 
 Still recommended before shipping publicly:
 
-- replace the legacy `cognitoId` field in Prisma with a non-AWS auth model
-- replace the demo credentials login with database-backed authentication and role-based authorization
 - add request validation with `zod`
 - add automated tests for server routes and core client flows
 - move attachment handling from metadata-only to real object storage
@@ -232,11 +232,11 @@ Use managed PostgreSQL in production:
 
 - task attachments are currently metadata-only, not binary file uploads
 - task assignee persistence currently supports a single stored assignee even though the UI can be expanded later to true multi-assignee support
-- the current login flow uses environment-backed demo credentials rather than a persisted Prisma user table
+- the current API token is a signed bearer token and not yet a rotating refresh-token/session pair
 
 ## Recommended Next Steps
 
-1. Replace the legacy auth/user schema with a non-AWS production model.
-2. Add request validation and integration tests.
-3. Add real file upload storage for attachments.
+1. Add request validation and integration tests for auth and task flows.
+2. Add real file upload storage for attachments.
+3. Upgrade bearer-token auth to refresh-token or session-based rotation.
 4. Add CI and deployment configs.

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
+const auth_1 = require("../src/lib/auth");
 const prisma = new client_1.PrismaClient();
 async function main() {
     await prisma.comment.deleteMany();
@@ -12,25 +13,66 @@ async function main() {
     const growthTeam = await prisma.team.create({
         data: {
             teamName: "Growth",
+            productOwnerUserId: null,
+            projectManagerUserId: null,
         },
     });
     const platformTeam = await prisma.team.create({
         data: {
             teamName: "Platform",
+            productOwnerUserId: null,
+            projectManagerUserId: null,
         },
     });
+    const defaultPasswordHash = await (0, auth_1.hashPassword)("ChangeMe123!");
     const amina = await prisma.user.create({
         data: {
-            cognitoId: "local-amina",
-            username: "Amina Hassan",
+            email: "amina@saasmanager.app",
+            name: "Amina Hassan",
+            passwordHash: defaultPasswordHash,
+            role: "Product Manager",
             teamId: growthTeam.id,
         },
     });
     const daniel = await prisma.user.create({
         data: {
-            cognitoId: "local-daniel",
-            username: "Daniel Kimani",
+            email: "daniel@saasmanager.app",
+            name: "Daniel Kimani",
+            passwordHash: defaultPasswordHash,
+            role: "Frontend Engineer",
             teamId: platformTeam.id,
+        },
+    });
+    const lina = await prisma.user.create({
+        data: {
+            email: "lina@saasmanager.app",
+            name: "Lina Achieng",
+            passwordHash: defaultPasswordHash,
+            role: "Designer",
+            teamId: growthTeam.id,
+        },
+    });
+    const musa = await prisma.user.create({
+        data: {
+            email: "musa@saasmanager.app",
+            name: "Musa Otieno",
+            passwordHash: defaultPasswordHash,
+            role: "Operations Lead",
+            teamId: platformTeam.id,
+        },
+    });
+    await prisma.team.update({
+        where: { id: growthTeam.id },
+        data: {
+            productOwnerUserId: amina.userId,
+            projectManagerUserId: musa.userId,
+        },
+    });
+    await prisma.team.update({
+        where: { id: platformTeam.id },
+        data: {
+            productOwnerUserId: amina.userId,
+            projectManagerUserId: musa.userId,
         },
     });
     const project = await prisma.project.create({
@@ -75,8 +117,8 @@ async function main() {
             priority: "Medium",
             tags: "Design System",
             projectId: project.id,
-            authorUserId: daniel.userId,
-            assignedUserId: daniel.userId,
+            authorUserId: lina.userId,
+            assignedUserId: lina.userId,
             dueDate: new Date("2026-04-07T00:00:00.000Z"),
         },
     });
@@ -98,7 +140,7 @@ async function main() {
             {
                 taskId: reviewTask.id,
                 text: "Let’s polish the border radius before we freeze the board visuals.",
-                userId: daniel.userId,
+                userId: lina.userId,
             },
             {
                 taskId: completedTask.id,
@@ -112,7 +154,7 @@ async function main() {
             taskId: reviewTask.id,
             fileName: "radius-audit.fig",
             fileUrl: "uploads/radius-audit.fig",
-            uploadedById: daniel.userId,
+            uploadedById: lina.userId,
         },
     });
 }

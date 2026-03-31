@@ -35,7 +35,10 @@ export const searchWorkspace = async (req: Request, res: Response) => {
       }),
       prisma.user.findMany({
         where: {
-          username: { contains: query, mode: "insensitive" },
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { email: { contains: query, mode: "insensitive" } },
+          ],
         },
         take: 10,
       }),

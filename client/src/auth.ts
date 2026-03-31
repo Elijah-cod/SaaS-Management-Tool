@@ -1,10 +1,8 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
-const demoEmail = process.env.DEMO_USER_EMAIL ?? "demo@saasmanager.app";
-const demoPassword = process.env.DEMO_USER_PASSWORD ?? "ChangeMe123!";
-const demoName = process.env.DEMO_USER_NAME ?? "Jordan Lee";
-const demoRole = process.env.DEMO_USER_ROLE ?? "Product Manager";
+const apiBaseUrl =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.AUTH_SECRET,
@@ -22,19 +20,41 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const password =
           typeof credentials?.password === "string" ? credentials.password : "";
 
-        if (
-          email.toLowerCase() !== demoEmail.toLowerCase() ||
-          password !== demoPassword
-        ) {
+        if (!email || !password) {
           return null;
         }
 
-        return {
-          id: "demo-user",
-          email: demoEmail,
-          name: demoName,
-          role: demoRole,
-        };
+        return fetch(`${apiBaseUrl}/auth/login`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        })
+          .then(async (response) => {
+            if (!response.ok) {
+              return null;
+            }
+
+            const data = (await response.json()) as {
+              accessToken: string;
+              user: {
+                id: string;
+                email: string;
+                name: string;
+                role: string;
+              };
+            };
+
+            return {
+              id: data.user.id,
+              email: data.user.email,
+              name: data.user.name,
+              role: data.user.role,
+              accessToken: data.accessToken,
+            };
+          })
+          .catch(() => null);
       },
     }),
   ],
@@ -43,15 +63,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.accessToken = user.accessToken;
       }
       return token;
     },
     session({ session, token }) {
       if (session.user) {
-        session.user.id = typeof token.id === "string" ? token.id : "demo-user";
-        session.user.role =
-          typeof token.role === "string" ? token.role : demoRole;
+        session.user.id = typeof token.id === "string" ? token.id : "";
+        session.user.role = typeof token.role === "string" ? token.role : "";
       }
+      session.accessToken =
+        typeof token.accessToken === "string" ? token.accessToken : "";
       return session;
     },
   },

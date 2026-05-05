@@ -1,9 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const searchController_1 = require("../controllers/searchController");
-const auth_1 = require("../middleware/auth");
-const router = (0, express_1.Router)();
-router.get("/", auth_1.requireAuth, searchController_1.searchWorkspace);
-exports.default = router;
+exports.default = void 0;
+var search_routes_1 = require("../modules/search/search.routes");
+Object.defineProperty(exports, "default", { enumerable: true, get: function () { return __importDefault(search_routes_1).default; } });
 //# sourceMappingURL=searchRoutes.js.map

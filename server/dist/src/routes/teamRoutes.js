@@ -1,9 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const teamController_1 = require("../controllers/teamController");
-const auth_1 = require("../middleware/auth");
-const router = (0, express_1.Router)();
-router.get("/", auth_1.requireAuth, teamController_1.getTeams);
-exports.default = router;
+exports.default = void 0;
+var team_routes_1 = require("../modules/teams/team.routes");
+Object.defineProperty(exports, "default", { enumerable: true, get: function () { return __importDefault(team_routes_1).default; } });
 //# sourceMappingURL=teamRoutes.js.map

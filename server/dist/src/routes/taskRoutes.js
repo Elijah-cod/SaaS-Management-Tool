@@ -1,15 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const taskController_1 = require("../controllers/taskController");
-const auth_1 = require("../middleware/auth");
-const validation_1 = require("../middleware/validation");
-const router = (0, express_1.Router)();
-router.get("/", auth_1.requireAuth, taskController_1.getTasks);
-router.post("/", auth_1.requireAuth, (0, auth_1.requireRole)("Product Manager", "Frontend Engineer", "Designer", "Operations Lead"), (0, validation_1.validateBody)(validation_1.validateCreateTaskBody), taskController_1.createTask);
-router.patch("/:taskId/status", auth_1.requireAuth, (0, auth_1.requireRole)("Product Manager", "Frontend Engineer", "Designer", "Operations Lead"), (0, validation_1.validateBody)(validation_1.validateTaskStatusBody), taskController_1.updateTaskStatus);
-router.patch("/:taskId/assignee", auth_1.requireAuth, (0, auth_1.requireRole)("Product Manager", "Frontend Engineer", "Designer", "Operations Lead"), (0, validation_1.validateBody)(validation_1.validateTaskAssigneeBody), taskController_1.updateTaskAssignee);
-router.post("/:taskId/comments", auth_1.requireAuth, (0, auth_1.requireRole)("Product Manager", "Frontend Engineer", "Designer", "Operations Lead"), (0, validation_1.validateBody)(validation_1.validateTaskCommentBody), taskController_1.createTaskComment);
-router.post("/:taskId/attachments", auth_1.requireAuth, (0, auth_1.requireRole)("Product Manager", "Frontend Engineer", "Designer", "Operations Lead"), (0, validation_1.validateBody)(validation_1.validateTaskAttachmentBody), taskController_1.createTaskAttachment);
-exports.default = router;
+exports.default = void 0;
+var task_routes_1 = require("../modules/tasks/task.routes");
+Object.defineProperty(exports, "default", { enumerable: true, get: function () { return __importDefault(task_routes_1).default; } });
 //# sourceMappingURL=taskRoutes.js.map

@@ -11,8 +11,13 @@ The current app includes a responsive dashboard shell, Kanban-style home board, 
 
 ```text
 client (Next.js)
-  -> RTK Query
+  -> app routes
+  -> feature modules (tasks, projects, workspace, auth, app-shell)
+  -> shared store + RTK Query base API
   -> server (Express API)
+server (Express)
+  -> feature modules (auth, projects, tasks, users, teams, search)
+  -> shared middleware, auth, error handling, security utilities
   -> Prisma
   -> PostgreSQL
 ```
@@ -28,11 +33,14 @@ client (Next.js)
 ```text
 .
 ├── client
-│   ├── src
+│   ├── src/app
+│   ├── src/features
+│   ├── src/shared
 │   └── package.json
 ├── server
+│   ├── src/modules
+│   ├── src/shared
 │   ├── prisma
-│   ├── src
 │   └── package.json
 └── README.md
 ```
@@ -164,9 +172,12 @@ Already in place:
 - health endpoint
 - CORS allowlist
 - Helmet
+- centralized API error handling
+- login rate limiting
 - request logging with Morgan
 - typed client and server build/typecheck commands
 - separate frontend/backend env files
+- feature-oriented client and server module boundaries
 - backend-backed task board interactions
 - persisted Prisma-backed users with hashed passwords
 - NextAuth credentials login backed by the Express auth API

@@ -1,8 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-
-const apiBaseUrl =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+import { authenticateWithApi } from "@/features/auth/lib/api-auth";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.AUTH_SECRET,
@@ -24,27 +22,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
-        return fetch(`${apiBaseUrl}/auth/login`, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        })
-          .then(async (response) => {
-            if (!response.ok) {
+        return authenticateWithApi({ email, password })
+          .then((data) => {
+            if (!data) {
               return null;
             }
-
-            const data = (await response.json()) as {
-              accessToken: string;
-              user: {
-                id: string;
-                email: string;
-                name: string;
-                role: string;
-              };
-            };
 
             return {
               id: data.user.id,

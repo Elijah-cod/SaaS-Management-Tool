@@ -12,7 +12,11 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { setIsMobileSidebarOpen } from "@/app/state";
+import {
+  selectIsMobileSidebarOpen,
+  selectIsSidebarCollapsed,
+  setIsMobileSidebarOpen,
+} from "@/features/app-shell/store/appShellSlice";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 
 const navItems = [
@@ -28,12 +32,8 @@ const navItems = [
 export default function Sidebar() {
   const dispatch = useAppDispatch();
   const pathname = usePathname();
-  const isSidebarCollapsed = useAppSelector(
-    (state) => state.global.isSidebarCollapsed
-  );
-  const isMobileSidebarOpen = useAppSelector(
-    (state) => state.global.isMobileSidebarOpen
-  );
+  const isSidebarCollapsed = useAppSelector(selectIsSidebarCollapsed);
+  const isMobileSidebarOpen = useAppSelector(selectIsMobileSidebarOpen);
 
   const renderNav = () => (
     <>

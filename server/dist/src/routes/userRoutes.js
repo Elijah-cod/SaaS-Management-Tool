@@ -1,9 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const userController_1 = require("../controllers/userController");
-const auth_1 = require("../middleware/auth");
-const router = (0, express_1.Router)();
-router.get("/", auth_1.requireAuth, userController_1.getUsers);
-exports.default = router;
+exports.default = void 0;
+var user_routes_1 = require("../modules/users/user.routes");
+Object.defineProperty(exports, "default", { enumerable: true, get: function () { return __importDefault(user_routes_1).default; } });
 //# sourceMappingURL=userRoutes.js.map

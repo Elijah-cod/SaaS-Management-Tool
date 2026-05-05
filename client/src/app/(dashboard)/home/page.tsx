@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { ArrowRight, MoveRight } from "lucide-react";
-import HomeBoard from "@/components/HomeBoard";
-import { useGetProjectsQuery } from "@/app/state/api";
+import HomeBoard from "@/features/tasks/components/HomeBoard";
+import { useGetProjectsQuery } from "@/features/projects/api/projectsApi";
 import type { DashboardStat } from "@/types";
 
 export default function HomePage() {

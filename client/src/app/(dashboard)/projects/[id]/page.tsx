@@ -1,7 +1,8 @@
 "use client";
 
 import { use } from "react";
-import { useGetProjectsQuery, useGetTasksQuery } from "@/app/state/api";
+import { useGetProjectsQuery } from "@/features/projects/api/projectsApi";
+import { useGetTasksQuery } from "@/features/tasks/api/tasksApi";
 
 export default function ProjectDetailsPage({
   params,

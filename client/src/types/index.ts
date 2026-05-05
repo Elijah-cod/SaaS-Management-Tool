@@ -63,3 +63,10 @@ export interface TaskComment {
   body: string;
   createdAt: string;
 }
+
+export interface WorkspaceSearchResults {
+  projects: Project[];
+  tasks: Task[];
+  users: User[];
+  teams: Team[];
+}

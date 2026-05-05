@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
+import { selectIsSidebarCollapsed } from "@/features/app-shell/store/appShellSlice";
 import { useAppSelector } from "@/lib/hooks";
 
 export default function DashboardLayout({
@@ -10,18 +10,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const isDarkMode = useAppSelector((state) => state.global.isDarkMode);
-  const isSidebarCollapsed = useAppSelector(
-    (state) => state.global.isSidebarCollapsed
-  );
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDarkMode]);
+  const isSidebarCollapsed = useAppSelector(selectIsSidebarCollapsed);
 
   return (
     <div className="flex min-h-screen w-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white">

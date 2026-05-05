@@ -7,7 +7,7 @@ import ProjectsDataGrid from "@/components/ProjectsDataGrid";
 import {
   useCreateProjectMutation,
   useGetProjectsQuery,
-} from "@/app/state/api";
+} from "@/features/projects/api/projectsApi";
 
 export default function ProjectsPage() {
   const { data: projects = [], isLoading, isFetching } = useGetProjectsQuery();

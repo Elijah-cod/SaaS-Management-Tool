@@ -13,19 +13,19 @@ import {
   Sun,
 } from "lucide-react";
 import {
+  selectIsDarkMode,
+  selectIsSidebarCollapsed,
   setIsDarkMode,
   setIsMobileSidebarOpen,
   setIsSidebarCollapsed,
-} from "@/app/state";
+} from "@/features/app-shell/store/appShellSlice";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 
 export default function Navbar() {
   const dispatch = useAppDispatch();
   const { data: session, status } = useSession();
-  const isDarkMode = useAppSelector((state) => state.global.isDarkMode);
-  const isSidebarCollapsed = useAppSelector(
-    (state) => state.global.isSidebarCollapsed
-  );
+  const isDarkMode = useAppSelector(selectIsDarkMode);
+  const isSidebarCollapsed = useAppSelector(selectIsSidebarCollapsed);
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 px-4 py-3 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/85 md:px-6">

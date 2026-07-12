@@ -7,6 +7,8 @@ Full-stack project management dashboard built with:
 
 The current app includes a responsive dashboard shell, Kanban-style home board, task detail drawer, drag-and-drop task movement, and backend-backed task updates for status, assignees, comments, and attachments.
 
+[Live frontend](https://saa-s-management-tool.vercel.app) · [Repository](https://github.com/Elijah-cod/SaaS-Management-Tool)
+
 ## Architecture
 
 ```text
@@ -49,18 +51,18 @@ server (Express)
 
 ### Client
 
-Create [client/.env.local](/Users/elijah/Documents/Projects/SaaS-Management-Tool/client/.env.local):
+Create `client/.env.local`:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL="http://localhost:4000"
 AUTH_SECRET="replace-with-a-long-random-string"
 ```
 
-Example file: [client/.env.local.example](/Users/elijah/Documents/Projects/SaaS-Management-Tool/client/.env.local.example)
+Example file: [`client/.env.local.example`](client/.env.local.example)
 
 ### Server
 
-Create `server/.env` from [server/.env.example](/Users/elijah/Documents/Projects/SaaS-Management-Tool/server/.env.example):
+Create `server/.env` from [`server/.env.example`](server/.env.example):
 
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/project_management?schema=public"
@@ -188,8 +190,8 @@ Already in place:
 
 Still recommended before shipping publicly:
 
-- add request validation with `zod`
-- add automated tests for server routes and core client flows
+- expand server integration coverage beyond authentication and route protection
+- add automated tests for core client workflows
 - move attachment handling from metadata-only to real object storage
 - add database-backed activity/audit history
 - add CI for `lint`, `typecheck`, and `build`
@@ -250,7 +252,7 @@ Use managed PostgreSQL in production:
 
 ## Recommended Next Steps
 
-1. Add request validation and integration tests for auth and task flows.
+1. Expand integration tests for task mutations and authorization boundaries.
 2. Add real file upload storage for attachments.
 3. Upgrade bearer-token auth to refresh-token or session-based rotation.
 4. Add CI and deployment configs.

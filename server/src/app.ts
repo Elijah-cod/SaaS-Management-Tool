@@ -11,6 +11,8 @@ import teamRoutes from "./routes/teamRoutes";
 import userRoutes from "./routes/userRoutes";
 import { errorHandler } from "./shared/http/error-handler";
 import { notFoundHandler } from "./shared/http/not-found-handler";
+import { asyncHandler } from "./shared/http/async-handler";
+import { prisma } from "./shared/database/prisma";
 
 export const createApp = () => {
   const app = express();
@@ -48,6 +50,19 @@ export const createApp = () => {
       timestamp: new Date().toISOString(),
     });
   });
+
+  app.get(
+    "/ready",
+    asyncHandler(async (_req, res) => {
+      await prisma.$queryRaw`SELECT 1`;
+      res.json({
+        status: "ready",
+        service: "server",
+        database: "connected",
+        timestamp: new Date().toISOString(),
+      });
+    })
+  );
 
   app.use("/auth", authRoutes);
   app.use("/projects", projectRoutes);

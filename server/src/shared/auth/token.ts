@@ -63,9 +63,23 @@ export const verifyAccessToken = (token: string) => {
   }
 
   try {
+    const parsedHeader = JSON.parse(decodeBase64Url(header)) as {
+      alg?: unknown;
+      typ?: unknown;
+    };
     const parsedPayload = JSON.parse(decodeBase64Url(payload)) as TokenPayload;
+    const userId = Number(parsedPayload.sub);
 
-    if (parsedPayload.exp <= Date.now()) {
+    if (
+      parsedHeader.alg !== "HS256" ||
+      parsedHeader.typ !== "JWT" ||
+      !Number.isInteger(userId) ||
+      userId <= 0 ||
+      typeof parsedPayload.email !== "string" ||
+      typeof parsedPayload.role !== "string" ||
+      typeof parsedPayload.exp !== "number" ||
+      parsedPayload.exp <= Date.now()
+    ) {
       return null;
     }
 

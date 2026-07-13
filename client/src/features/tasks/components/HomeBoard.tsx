@@ -7,7 +7,7 @@ import {
   Droppable,
   type DropResult,
 } from "@hello-pangea/dnd";
-import { GripVertical, Plus } from "lucide-react";
+import { AlertCircle, GripVertical, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useGetProjectsQuery } from "@/features/projects/api/projectsApi";
@@ -27,27 +27,30 @@ import {
   flattenBoard,
   getUserInitials,
   normalizeTaskStatus,
-  roleStyles,
   type BoardState,
   type ColumnId,
   typeColors,
 } from "@/features/tasks/lib/task-board";
 import { useGetUsersQuery } from "@/features/workspace/api/workspaceApi";
 import type { Task, User } from "@/types";
+import { DataState, LoadingRows, StatusChip } from "@/shared/ui/primitives";
 
 export default function HomeBoard() {
   const { data: session, status } = useSession();
   const sessionReady =
     status === "authenticated" && Boolean(session?.accessToken);
-  const { data: taskData } = useGetTasksQuery(undefined, {
+  const tasksQuery = useGetTasksQuery(undefined, {
     skip: !sessionReady,
   });
-  const { data: usersData } = useGetUsersQuery(undefined, {
+  const usersQuery = useGetUsersQuery(undefined, {
     skip: !sessionReady,
   });
-  const { data: projectsData } = useGetProjectsQuery(undefined, {
+  const projectsQuery = useGetProjectsQuery(undefined, {
     skip: !sessionReady,
   });
+  const taskData = tasksQuery.data;
+  const usersData = usersQuery.data;
+  const projectsData = projectsQuery.data;
   const users = useMemo(() => usersData ?? [], [usersData]);
   const projects = useMemo(() => projectsData ?? [], [projectsData]);
   const [createTask] = useCreateTaskMutation();
@@ -301,60 +304,88 @@ export default function HomeBoard() {
       }));
     } catch (error) {
       console.error("Failed to create task", error);
-      setCreateTaskError("We couldn't create that task. Please try again.");
+      setCreateTaskError("The task could not be created. Check the API connection and try again.");
     } finally {
       setIsCreatingTask(false);
     }
   };
 
   if (status === "loading") {
-    return (
-      <div className="rounded-[2rem] border border-white/60 bg-white/70 p-8 text-sm text-slate-500 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.25)] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/75 dark:text-slate-300">
-        Syncing your workspace session...
-      </div>
-    );
+    return <LoadingRows count={4} />;
   }
 
   if (status === "authenticated" && !session?.accessToken) {
     return (
-      <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-8 text-sm text-amber-900 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.25)] dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
-        Your dashboard session is active, but the API token has not finished syncing yet. Refresh once, or sign in again if task updates stay locked.
-      </div>
+      <DataState
+        icon={AlertCircle}
+        tone="warning"
+        title="Workspace session is not ready"
+        description="Your account is signed in, but its API token is missing. Sign out and sign in again to restore task access."
+      />
     );
   }
 
   if (!sessionReady) {
     return (
-      <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-8 text-sm text-amber-900 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.25)] dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
-        Sign in to load live projects and move tasks across the board.
-      </div>
+      <DataState
+        icon={AlertCircle}
+        tone="warning"
+        title="Sign-in required"
+        description="Sign in to load live projects and move tasks across the board."
+      />
+    );
+  }
+
+  if (tasksQuery.isLoading || usersQuery.isLoading || projectsQuery.isLoading) {
+    return <LoadingRows count={5} />;
+  }
+
+  if (tasksQuery.isError || usersQuery.isError || projectsQuery.isError) {
+    return (
+      <DataState
+        icon={AlertCircle}
+        tone="danger"
+        title="The delivery board is unavailable"
+        description="The workspace API did not return all required board data. Check the service connection and retry."
+        action={
+          <button
+            type="button"
+            onClick={() => {
+              tasksQuery.refetch();
+              usersQuery.refetch();
+              projectsQuery.refetch();
+            }}
+            className="ui-button-secondary"
+          >
+            Retry
+          </button>
+        }
+      />
     );
   }
 
   return (
     <>
-      <div className="mb-5 flex flex-col gap-3 rounded-[2rem] border border-white/60 bg-white/70 p-4 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.2)] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/75 md:flex-row md:items-center md:justify-between">
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
-            Weekly execution
-          </p>
-          <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
-            Move work forward and add new tasks without leaving the board.
+          <h3 className="text-sm font-semibold text-[var(--foreground)]">
+            Task board
           </h3>
+          <p className="mt-1 text-xs text-[var(--muted)]">Drag tasks between lanes to update delivery status.</p>
         </div>
         <button
           type="button"
           disabled={projects.length === 0}
           onClick={() => setIsComposerOpen((current) => !current)}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+          className={isComposerOpen ? "ui-button-secondary" : "ui-button-primary"}
         >
-          <Plus size={16} />
-          New task
+          {isComposerOpen ? <X size={15} /> : <Plus size={15} />}
+          {isComposerOpen ? "Close" : "New task"}
         </button>
       </div>
 
       {projects.length === 0 ? (
-        <div className="mb-6 rounded-[2rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+        <div className="mb-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
           <p className="font-semibold">Create a project before adding tasks.</p>
           <p className="mt-1">
             This workspace does not have any projects yet, so new tasks do not
@@ -362,7 +393,7 @@ export default function HomeBoard() {
           </p>
           <Link
             href="/projects"
-            className="mt-3 inline-flex items-center rounded-full border border-amber-300 px-4 py-2 font-semibold transition hover:bg-amber-100 dark:border-amber-800 dark:hover:bg-amber-900/40"
+            className="ui-button-secondary mt-3"
           >
             Go to Projects
           </Link>
@@ -372,10 +403,10 @@ export default function HomeBoard() {
       {isComposerOpen && projects.length > 0 ? (
         <form
           onSubmit={handleCreateTask}
-          className="mb-6 grid gap-4 rounded-[2rem] border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.25)] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/75 md:grid-cols-2"
+          className="ui-panel mb-4 grid gap-4 p-4 md:grid-cols-2"
         >
-          <label className="space-y-2 md:col-span-2">
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="space-y-1.5 md:col-span-2">
+            <span className="text-sm font-semibold">
               Task title
             </span>
             <input
@@ -386,13 +417,13 @@ export default function HomeBoard() {
                   title: event.target.value,
                 }))
               }
-              className="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="ui-field"
               placeholder="Add a clear task title"
               required
             />
           </label>
-          <label className="space-y-2 md:col-span-2">
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="space-y-1.5 md:col-span-2">
+            <span className="text-sm font-semibold">
               Description
             </span>
             <textarea
@@ -403,12 +434,12 @@ export default function HomeBoard() {
                   description: event.target.value,
                 }))
               }
-              className="min-h-28 w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="ui-field min-h-24 resize-y"
               placeholder="Capture the outcome, context, or handoff notes"
             />
           </label>
-          <label className="space-y-2">
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="space-y-1.5">
+            <span className="text-sm font-semibold">
               Project
             </span>
             <select
@@ -419,7 +450,7 @@ export default function HomeBoard() {
                   projectId: Number(event.target.value),
                 }))
               }
-              className="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="ui-field"
             >
               {projects.map((project) => (
                 <option key={project.id} value={project.id}>
@@ -428,8 +459,8 @@ export default function HomeBoard() {
               ))}
             </select>
           </label>
-          <label className="space-y-2">
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="space-y-1.5">
+            <span className="text-sm font-semibold">
               Assignee
             </span>
             <select
@@ -440,7 +471,7 @@ export default function HomeBoard() {
                   assigneeId: event.target.value,
                 }))
               }
-              className="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="ui-field"
             >
               <option value="">Unassigned</option>
               {users.map((user) => (
@@ -450,8 +481,8 @@ export default function HomeBoard() {
               ))}
             </select>
           </label>
-          <label className="space-y-2">
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="space-y-1.5">
+            <span className="text-sm font-semibold">
               Priority
             </span>
             <select
@@ -462,15 +493,15 @@ export default function HomeBoard() {
                   priority: event.target.value,
                 }))
               }
-              className="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="ui-field"
             >
               <option>Low</option>
               <option>Medium</option>
               <option>High</option>
             </select>
           </label>
-          <label className="space-y-2">
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="space-y-1.5">
+            <span className="text-sm font-semibold">
               Type
             </span>
             <select
@@ -481,7 +512,7 @@ export default function HomeBoard() {
                   type: event.target.value,
                 }))
               }
-              className="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="ui-field"
             >
               <option>Feature</option>
               <option>Bugfix</option>
@@ -489,8 +520,8 @@ export default function HomeBoard() {
               <option>Infrastructure</option>
             </select>
           </label>
-          <label className="space-y-2 md:col-span-2">
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <label className="space-y-1.5 md:col-span-2">
+            <span className="text-sm font-semibold">
               Due date
             </span>
             <input
@@ -502,26 +533,26 @@ export default function HomeBoard() {
                   dueDate: event.target.value,
                 }))
               }
-              className="w-full rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="ui-field"
             />
           </label>
           {createTaskError ? (
-            <p className="text-sm font-medium text-rose-600 dark:text-rose-300 md:col-span-2">
+            <p className="text-sm font-medium text-[var(--danger)] md:col-span-2" role="alert">
               {createTaskError}
             </p>
           ) : null}
-          <div className="flex flex-col gap-3 md:col-span-2 md:flex-row md:justify-end">
+          <div className="flex flex-col gap-2 md:col-span-2 md:flex-row md:justify-end">
             <button
               type="button"
               onClick={() => setIsComposerOpen(false)}
-              className="rounded-full border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="ui-button-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isCreatingTask}
-              className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+              className="ui-button-primary"
             >
               {isCreatingTask ? "Creating..." : "Create task"}
             </button>
@@ -530,18 +561,18 @@ export default function HomeBoard() {
       ) : null}
 
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="-mx-1 overflow-x-auto pb-2">
-          <div className="grid auto-cols-[minmax(18rem,1fr)] grid-flow-col gap-4 px-1 md:grid-flow-row md:auto-cols-auto md:grid-cols-2 xl:grid-cols-4">
+        <div className="-mx-1 overflow-x-auto pb-2" aria-label="Task status board">
+          <div className="grid auto-cols-[minmax(17rem,1fr)] grid-flow-col gap-3 px-1 md:grid-flow-row md:auto-cols-auto md:grid-cols-2 xl:grid-cols-4">
             {boardColumns.map((column) => (
               <div
                 key={column.id}
-                className="min-w-0 rounded-[2rem] border border-white/60 bg-white/70 p-4 shadow-[0_20px_60px_-24px_rgba(15,23,42,0.25)] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/75 md:p-5"
+                className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-2"
               >
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className={`text-2xl font-bold tracking-tight ${column.accent}`}>
+                <div className="flex items-center justify-between px-1.5 py-1.5">
+                  <h3 className="text-xs font-semibold text-[var(--muted-strong)]">
                     {column.title}
                   </h3>
-                  <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                  <span className="min-w-6 rounded-md bg-[var(--surface-strong)] px-1.5 py-0.5 text-center text-[11px] font-semibold tabular-nums text-[var(--muted)]">
                     {board[column.id].length}
                   </span>
                 </div>
@@ -551,9 +582,9 @@ export default function HomeBoard() {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`min-h-24 space-y-4 rounded-[1.75rem] p-1 transition ${
+                      className={`min-h-28 space-y-2 rounded-lg p-1 ${
                         snapshot.isDraggingOver
-                          ? "bg-sky-50/80 dark:bg-sky-950/30"
+                          ? "bg-[var(--accent-soft)]"
                           : "bg-transparent"
                       }`}
                     >
@@ -573,91 +604,67 @@ export default function HomeBoard() {
                               <article
                                 ref={dragProvided.innerRef}
                                 {...dragProvided.draggableProps}
-                                className={`rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-[0_14px_36px_-20px_rgba(15,23,42,0.28)] transition dark:border-slate-800 dark:bg-slate-950/90 ${
+                                className={`rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 ${
                                   dragSnapshot.isDragging
-                                    ? "rotate-[1.5deg] shadow-[0_24px_50px_-18px_rgba(14,165,233,0.45)]"
+                                    ? "border-[var(--accent)] shadow-[0_16px_36px_-20px_rgb(15_23_42_/_0.45)]"
                                     : ""
                                 }`}
                               >
-                                <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-start justify-between gap-2">
                                   <button
                                     type="button"
                                     onClick={() => setSelectedTaskId(task.id)}
-                                    className="flex-1 space-y-4 text-left"
+                                    className="min-w-0 flex-1 text-left"
                                   >
-                                    <div className="flex flex-wrap items-center gap-3">
+                                    <div className="flex flex-wrap items-center gap-2">
                                       <span
-                                        className={`h-5 w-5 rounded-md ${
+                                        className={`h-2 w-2 rounded-sm ${
                                           typeColors[task.type ?? ""] ?? "bg-slate-400"
                                         }`}
+                                        aria-hidden="true"
                                       />
-                                      <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                                        {task.type ?? "Task"}
+                                      <span className="text-[11px] font-medium text-[var(--muted)]">
+                                        {task.ticket ?? `TASK-${task.id}`}
                                       </span>
-                                      {creator ? (
-                                        <span
-                                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                                            roleStyles[creator.role ?? "default"] ??
-                                            roleStyles.default
-                                          }`}
-                                        >
-                                          Added by {creator.role}
-                                        </span>
-                                      ) : null}
+                                      <StatusChip
+                                        label={task.priority ?? "Medium"}
+                                        tone={task.priority?.toLowerCase() === "high" ? "warning" : "neutral"}
+                                      />
                                     </div>
-                                    <h4 className="text-lg font-semibold leading-tight text-slate-950 dark:text-white sm:text-xl">
+                                    <h4 className="mt-2 text-sm font-semibold leading-5 text-[var(--foreground)]">
                                       {task.title}
                                     </h4>
-                                    <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
-                                      {task.description}
-                                    </p>
+                                    {task.description ? (
+                                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--muted)]">
+                                        {task.description}
+                                      </p>
+                                    ) : null}
                                   </button>
 
                                   <button
                                     type="button"
                                     {...dragProvided.dragHandleProps}
-                                    className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                    className="rounded-md p-1.5 text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
                                     aria-label={`Drag ${task.title}`}
                                   >
                                     <GripVertical size={18} />
                                   </button>
                                 </div>
 
-                                <div className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-800">
-                                  <div className="mb-3 flex flex-wrap gap-2">
-                                    {assignees.map((user) => (
-                                      <span
-                                        key={`${task.id}-${user.id}-role`}
-                                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                                          roleStyles[user.role ?? "default"] ??
-                                          roleStyles.default
-                                        }`}
-                                      >
-                                        {user.role}
-                                      </span>
-                                    ))}
-                                  </div>
-                                  <div className="flex items-center justify-between gap-3">
-                                    <span className="text-sm font-semibold tracking-wide text-slate-400 dark:text-slate-500">
-                                      {task.ticket ?? `TASK-${task.id}`}
-                                    </span>
-                                    <div className="flex -space-x-2">
-                                      {assignees.map((user, avatarIndex) => (
+                                <div className="mt-3 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-2.5">
+                                  <span className="truncate text-[11px] text-[var(--muted)]">
+                                    {creator ? `Added by ${creator.name ?? creator.email}` : task.type ?? "Task"}
+                                  </span>
+                                  <div className="flex -space-x-1">
+                                      {assignees.map((user) => (
                                         <span
                                           key={`${task.id}-${user.id}`}
-                                          className={`flex h-10 w-10 items-center justify-center rounded-full border-2 border-white text-sm font-bold text-slate-900 dark:border-slate-950 ${
-                                            avatarIndex % 3 === 0
-                                              ? "bg-amber-300"
-                                              : avatarIndex % 3 === 1
-                                                ? "bg-sky-400"
-                                                : "bg-fuchsia-400"
-                                          }`}
+                                          className="flex h-6 w-6 items-center justify-center rounded-md border border-[var(--surface)] bg-[var(--surface-strong)] text-[9px] font-bold text-[var(--muted-strong)]"
                                           title={user.name ?? user.email}
                                         >
                                           {getUserInitials(user)}
                                         </span>
                                       ))}
-                                    </div>
                                   </div>
                                 </div>
                               </article>

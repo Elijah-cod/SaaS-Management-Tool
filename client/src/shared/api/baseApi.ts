@@ -14,11 +14,7 @@ const baseQuery = fetchBaseQuery({
   baseUrl: apiBaseUrl,
   prepareHeaders: (headers, { getState }) => {
     const state = getState() as RootState;
-    const token =
-      selectAccessToken(state) ??
-      (typeof window !== "undefined"
-        ? window.localStorage.getItem("accessToken")
-        : null);
+    const token = selectAccessToken(state);
 
     if (token) {
       headers.set("authorization", `Bearer ${token}`);

@@ -66,6 +66,8 @@ Create `server/.env` from [`server/.env.example`](server/.env.example):
 
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/project_management?schema=public"
+# Optional unpooled connection used by migrations (recommended with Neon)
+DIRECT_URL=""
 PORT=4000
 CLIENT_URL="http://localhost:3000"
 API_AUTH_SECRET="replace-with-a-long-random-string"
@@ -76,6 +78,7 @@ Notes:
 
 - `CLIENT_URL` can be a comma-separated list in production if you need multiple allowed origins.
 - `DATABASE_URL` must point to a live Postgres instance before running Prisma commands.
+- Runtime connections may use Neon's pooled URL. `npm run migrate:deploy` uses `DIRECT_URL` when provided and otherwise converts a Neon pooler hostname to its direct counterpart.
 
 ## Local Development
 
@@ -106,6 +109,12 @@ Health check:
 
 ```bash
 curl http://localhost:4000/health
+```
+
+Database readiness check:
+
+```bash
+curl http://localhost:4000/ready
 ```
 
 ### 4. Start the frontend
@@ -232,8 +241,18 @@ Production server start flow:
 npm install
 npx prisma generate
 npm run build
+npm run migrate:deploy
 npm run start
 ```
+
+For Railway, create the backend service from this repository with:
+
+- Root directory: `/server`
+- Config file path: `/server/railway.json`
+- Required variables: `DATABASE_URL`, `CLIENT_URL`, `API_AUTH_SECRET`, `NODE_ENV=production`
+- Optional migration variable: `DIRECT_URL` (the unpooled Neon connection string)
+
+After Railway generates a public domain, set Vercel's `NEXT_PUBLIC_API_BASE_URL` to that HTTPS origin and redeploy the frontend.
 
 ### Database
 

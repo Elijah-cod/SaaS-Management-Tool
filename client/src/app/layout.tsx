@@ -5,8 +5,11 @@ import "./globals.css";
 import StoreProvider from "./redux";
 
 export const metadata: Metadata = {
-  title: "Project Management",
-  description: "Full-stack project management dashboard",
+  title: {
+    default: "SaaS Manager",
+    template: "%s · SaaS Manager",
+  },
+  description: "A focused delivery workspace for startup teams.",
 };
 
 export default async function RootLayout({

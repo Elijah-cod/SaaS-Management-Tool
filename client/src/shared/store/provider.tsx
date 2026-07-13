@@ -30,12 +30,10 @@ function SessionTokenBridge() {
 
     if (session?.accessToken) {
       dispatch(setAccessToken(session.accessToken));
-      window.localStorage.setItem("accessToken", session.accessToken);
       return;
     }
 
     dispatch(setAccessToken(null));
-    window.localStorage.removeItem("accessToken");
   }, [dispatch, session?.accessToken, status]);
 
   return null;
@@ -86,9 +84,6 @@ export default function StoreProvider({
       nextStore.dispatch(setAccessToken(session.accessToken));
       nextStore.dispatch(setAuthStatus("authenticated"));
 
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem("accessToken", session.accessToken);
-      }
     }
 
     return nextStore;

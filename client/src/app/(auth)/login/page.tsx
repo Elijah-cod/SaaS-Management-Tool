@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { AuthError } from "next-auth";
-import { redirect } from "next/navigation";
-import { signIn } from "@/auth";
+import ApiAvailability from "@/features/auth/components/ApiAvailability";
+import LoginForm from "@/features/auth/components/LoginForm";
+import { Boxes, Check, Command } from "lucide-react";
 
 type LoginPageProps = {
   searchParams?: Promise<{
@@ -14,84 +14,84 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const hasCredentialsError = params.error === "credentials";
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-12 dark:bg-slate-950">
-      <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-            Welcome back
-          </p>
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
-            Sign in to continue
+    <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] lg:grid lg:grid-cols-[minmax(28rem,0.9fr)_minmax(32rem,1.1fr)]">
+      <section className="relative hidden min-h-screen overflow-hidden border-r border-[var(--border)] bg-[var(--surface-muted)] p-10 lg:flex lg:flex-col lg:justify-between xl:p-14">
+        <div className="absolute inset-0 opacity-50 [background-image:linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)] [background-size:32px_32px]" />
+        <div className="relative flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--foreground)] text-[var(--surface)]">
+            <Boxes size={18} aria-hidden="true" />
+          </span>
+          <span className="font-semibold tracking-[-0.015em]">SaaS Manager</span>
+        </div>
+
+        <div className="relative max-w-xl">
+          <p className="mb-4 text-xs font-semibold text-[var(--accent)]">DELIVERY CONSOLE</p>
+          <h1 className="text-4xl font-[650] leading-[1.12] tracking-[-0.04em] xl:text-5xl">
+            Keep the team aligned without slowing the work down.
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Use your account credentials to access the dashboard.
+          <p className="mt-5 max-w-lg text-base leading-7 text-[var(--muted)]">
+            Plan projects, move work through delivery, and keep ownership visible in one focused workspace.
           </p>
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-100">
-          <p className="font-semibold">Seeded workspace account</p>
-          <p className="mt-1">Email: amina@saasmanager.app</p>
-          <p>Password: ChangeMe123!</p>
-        </div>
-
-        {hasCredentialsError ? (
-          <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
-            We couldn&apos;t sign you in with those credentials. Try one of the seeded workspace users after running the latest database migration and seed.
+          <div className="mt-8 grid gap-3 text-sm text-[var(--muted-strong)]">
+            {[
+              "Live project and task visibility",
+              "Fast, contextual updates",
+              "Clear ownership and delivery state",
+            ].map((benefit) => (
+              <div key={benefit} className="flex items-center gap-3">
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[var(--accent-soft)] text-[var(--accent)]">
+                  <Check size={13} strokeWidth={2.5} aria-hidden="true" />
+                </span>
+                {benefit}
+              </div>
+            ))}
           </div>
-        ) : null}
+        </div>
 
-        <form
-          action={async (formData) => {
-            "use server";
-
-            try {
-              await signIn("credentials", {
-                email: formData.get("email"),
-                password: formData.get("password"),
-                redirectTo: "/home",
-              });
-            } catch (error) {
-              if (error instanceof AuthError) {
-                redirect("/login?error=credentials");
-              }
-
-              throw error;
-            }
-          }}
-          className="mt-8 space-y-4"
-        >
-          <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-            <span>Email</span>
-            <input
-              name="email"
-              type="email"
-              required
-              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-slate-300"
-              placeholder="you@company.com"
-            />
-          </label>
-          <label className="block space-y-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-            <span>Password</span>
-            <input
-              name="password"
-              type="password"
-              required
-              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-slate-300"
-              placeholder="Enter your password"
-            />
-          </label>
-          <button
-            type="submit"
-            className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-          >
-            Sign in
-          </button>
-        </form>
-
-        <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
-          Need account help? <Link href="/settings" className="font-medium text-slate-900 dark:text-white">Visit settings</Link>
+        <p className="relative text-xs text-[var(--muted)]">
+          Built for startup teams moving from idea to shipped.
         </p>
-      </div>
+      </section>
+
+      <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-8">
+        <div className="w-full max-w-[26rem]">
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--foreground)] text-[var(--surface)]">
+              <Boxes size={18} aria-hidden="true" />
+            </span>
+            <span className="font-semibold tracking-[-0.015em]">SaaS Manager</span>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold text-[var(--accent)]">WELCOME BACK</p>
+            <h2 className="mt-2 text-3xl font-[650] tracking-[-0.035em]">
+              Sign in to your workspace
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+              Continue where your team left off.
+            </p>
+          </div>
+
+          <div className="mt-5">
+            <ApiAvailability />
+          </div>
+
+          <LoginForm initialError={hasCredentialsError} />
+
+          <div className="mt-6 border-t border-[var(--border)] pt-5">
+            <div className="flex items-start gap-3 text-xs leading-5 text-[var(--muted)]">
+              <Command className="mt-0.5 shrink-0" size={14} aria-hidden="true" />
+              <p>
+                Demo access uses the seeded account shown in the form. Additional accounts are documented in the{" "}
+                <Link href="https://github.com/Elijah-cod/SaaS-Management-Tool" className="font-semibold text-[var(--foreground)] hover:text-[var(--accent)]">
+                  project repository
+                </Link>
+                .
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

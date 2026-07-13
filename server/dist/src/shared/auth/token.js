@@ -40,8 +40,17 @@ const verifyAccessToken = (token) => {
         return null;
     }
     try {
+        const parsedHeader = JSON.parse(decodeBase64Url(header));
         const parsedPayload = JSON.parse(decodeBase64Url(payload));
-        if (parsedPayload.exp <= Date.now()) {
+        const userId = Number(parsedPayload.sub);
+        if (parsedHeader.alg !== "HS256" ||
+            parsedHeader.typ !== "JWT" ||
+            !Number.isInteger(userId) ||
+            userId <= 0 ||
+            typeof parsedPayload.email !== "string" ||
+            typeof parsedPayload.role !== "string" ||
+            typeof parsedPayload.exp !== "number" ||
+            parsedPayload.exp <= Date.now()) {
             return null;
         }
         return parsedPayload;

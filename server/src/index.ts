@@ -1,9 +1,11 @@
 import "dotenv/config";
 import { env } from "./config/env";
-import { createApp } from "./app";
+import app from "./app";
 
-const app = createApp();
+if (!process.env.VERCEL) {
+  app.listen(env.port, "0.0.0.0", () => {
+    console.log(`Server running on http://0.0.0.0:${env.port}`);
+  });
+}
 
-app.listen(env.port, "0.0.0.0", () => {
-  console.log(`Server running on http://0.0.0.0:${env.port}`);
-});
+export default app;

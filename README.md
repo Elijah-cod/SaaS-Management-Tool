@@ -7,7 +7,7 @@ Full-stack project management dashboard built with:
 
 The current app includes a responsive dashboard shell, Kanban-style home board, task detail drawer, drag-and-drop task movement, and backend-backed task updates for status, assignees, comments, and attachments.
 
-[Live frontend](https://saa-s-management-tool.vercel.app) · [Repository](https://github.com/Elijah-cod/SaaS-Management-Tool)
+[Live frontend](https://saa-s-management-tool.vercel.app) · [Live API](https://saas-management-tool-api.vercel.app/health) · [Repository](https://github.com/Elijah-cod/SaaS-Management-Tool)
 
 ## Architecture
 
@@ -21,7 +21,7 @@ server (Express)
   -> feature modules (auth, projects, tasks, users, teams, search)
   -> shared middleware, auth, error handling, security utilities
   -> Prisma
-  -> PostgreSQL
+  -> Neon PostgreSQL
 ```
 
 ## Requirements
@@ -196,6 +196,10 @@ Already in place:
 - role-based authorization on write actions
 - request validation on auth, project, and task mutation endpoints
 - server integration tests for auth and route protection
+- database-aware readiness checks
+- Vercel Express/Fluid Compute deployment configuration
+- Railway deployment configuration as an alternative runtime
+- platform-managed production secrets
 
 Still recommended before shipping publicly:
 
@@ -204,55 +208,51 @@ Still recommended before shipping publicly:
 - move attachment handling from metadata-only to real object storage
 - add database-backed activity/audit history
 - add CI for `lint`, `typecheck`, and `build`
-- add Dockerfiles or deployment manifests
-- add production secrets management
+- automate database migrations in CI/CD with an explicit approval gate
 
 ## Deployment Guidance
 
 ### Frontend
 
-Deploy `client/` to a Next.js-friendly platform such as:
-
-- Vercel
-- Netlify
+The production frontend is the Vercel project `saa-s-management-tool` with the repository root directory set to `client`.
 
 Required env:
 
-- `NEXT_PUBLIC_API_BASE_URL`
+- `NEXT_PUBLIC_API_BASE_URL=https://saas-management-tool-api.vercel.app`
+- `AUTH_SECRET=<long-random-secret>`
 
 ### Backend
 
-Deploy `server/` to a Node platform such as:
-
-- Railway
-- Render
-- Fly.io
+The production backend is the Vercel project `saas-management-tool-api` with the repository root directory set to `server`. [`server/vercel.json`](server/vercel.json) selects the native Express framework and Fluid Compute. Both projects are connected to this repository and deploy from `main`.
 
 Required env:
 
-- `DATABASE_URL`
-- `PORT`
-- `CLIENT_URL`
-- `NODE_ENV=production`
+- `DATABASE_URL=<pooled-neon-connection-string>`
+- `CLIENT_URL=https://saa-s-management-tool.vercel.app`
+- `API_AUTH_SECRET=<long-random-secret>`
 
-Production server start flow:
+Verify a release with:
 
 ```bash
-npm install
-npx prisma generate
-npm run build
-npm run migrate:deploy
-npm run start
+curl https://saas-management-tool-api.vercel.app/health
+curl https://saas-management-tool-api.vercel.app/ready
 ```
 
-For Railway, create the backend service from this repository with:
+Run schema migrations as an explicit release step before deploying code that depends on them:
+
+```bash
+cd server
+DIRECT_URL="<unpooled-neon-connection-string>" npm run migrate:deploy
+```
+
+Railway remains supported as an alternative backend runtime. Configure it with:
 
 - Root directory: `/server`
 - Config file path: `/server/railway.json`
 - Required variables: `DATABASE_URL`, `CLIENT_URL`, `API_AUTH_SECRET`, `NODE_ENV=production`
 - Optional migration variable: `DIRECT_URL` (the unpooled Neon connection string)
 
-After Railway generates a public domain, set Vercel's `NEXT_PUBLIC_API_BASE_URL` to that HTTPS origin and redeploy the frontend.
+If Railway is used, set the frontend's `NEXT_PUBLIC_API_BASE_URL` to its generated HTTPS domain and redeploy the frontend.
 
 ### Database
 
@@ -274,4 +274,4 @@ Use managed PostgreSQL in production:
 1. Expand integration tests for task mutations and authorization boundaries.
 2. Add real file upload storage for attachments.
 3. Upgrade bearer-token auth to refresh-token or session-based rotation.
-4. Add CI and deployment configs.
+4. Add CI quality gates and approved production migration automation.

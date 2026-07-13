@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Boxes,
   FolderKanban,
-  House,
+  Gauge,
   Search,
   Settings,
   TimerReset,
@@ -20,12 +21,15 @@ import {
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 
 const navItems = [
-  { href: "/home", label: "Home", icon: House },
+  { href: "/home", label: "Overview", icon: Gauge },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/timeline", label: "Timeline", icon: TimerReset },
   { href: "/search", label: "Search", icon: Search },
   { href: "/users", label: "Users", icon: Users },
   { href: "/teams", label: "Teams", icon: UsersRound },
+];
+
+const utilityItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -37,18 +41,18 @@ export default function Sidebar() {
 
   const renderNav = () => (
     <>
-      <div className="mb-8 flex items-center justify-between gap-3 px-2">
+      <div className="mb-6 flex h-10 items-center justify-between gap-3 px-1">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white dark:bg-white dark:text-slate-950">
-            PM
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--foreground)] text-[var(--surface)]">
+            <Boxes size={16} aria-hidden="true" />
           </div>
           {!isSidebarCollapsed && (
             <div className="min-w-0">
-              <p className="truncate text-base font-semibold text-slate-900 dark:text-white">
+              <p className="truncate text-sm font-semibold text-[var(--foreground)]">
                 SaaS Manager
               </p>
-              <p className="truncate text-xs text-slate-500 dark:text-slate-400">
-                Team workspace
+              <p className="truncate text-[11px] text-[var(--muted)]">
+                Delivery workspace
               </p>
             </div>
           )}
@@ -56,14 +60,14 @@ export default function Sidebar() {
         <button
           type="button"
           onClick={() => dispatch(setIsMobileSidebarOpen(false))}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 md:hidden"
+          className="ui-icon-button md:hidden"
           aria-label="Close navigation"
         >
           <X size={18} />
         </button>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-2">
+      <nav className="flex flex-1 flex-col gap-1" aria-label="Workspace navigation">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href;
           return (
@@ -71,10 +75,32 @@ export default function Sidebar() {
               key={href}
               href={href}
               onClick={() => dispatch(setIsMobileSidebarOpen(false))}
-              className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition ${
+              title={isSidebarCollapsed ? label : undefined}
+              className={`flex min-h-10 items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium ${
                 isActive
-                  ? "bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                  ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                  : "text-[var(--muted-strong)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
+              }`}
+            >
+              <Icon size={18} />
+              {!isSidebarCollapsed && <span>{label}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+      <nav className="mt-4 border-t border-[var(--border)] pt-3" aria-label="Workspace utilities">
+        {utilityItems.map(({ href, label, icon: Icon }) => {
+          const isActive = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => dispatch(setIsMobileSidebarOpen(false))}
+              title={isSidebarCollapsed ? label : undefined}
+              className={`flex min-h-10 items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium ${
+                isActive
+                  ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                  : "text-[var(--muted-strong)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
               }`}
             >
               <Icon size={18} />
@@ -89,7 +115,7 @@ export default function Sidebar() {
   return (
     <>
       <div
-        className={`fixed inset-0 z-30 bg-slate-950/45 backdrop-blur-sm transition md:hidden ${
+        className={`fixed inset-0 z-30 bg-[var(--overlay)] transition-opacity md:hidden ${
           isMobileSidebarOpen
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0"
@@ -98,8 +124,8 @@ export default function Sidebar() {
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-slate-200 bg-white px-3 py-4 shadow-xl transition-all dark:border-slate-800 dark:bg-slate-950 md:z-30 md:shadow-none ${
-          isSidebarCollapsed ? "md:w-20" : "md:w-64"
+        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[var(--border)] bg-[var(--surface)] px-3 py-4 shadow-[0_24px_70px_-24px_rgb(15_23_42_/_0.4)] transition-all md:z-30 md:shadow-none ${
+          isSidebarCollapsed ? "md:w-[4.5rem]" : "md:w-60"
         } ${
           isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } w-[18rem] md:translate-x-0`}

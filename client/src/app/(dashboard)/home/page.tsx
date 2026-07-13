@@ -1,95 +1,89 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, MoveRight } from "lucide-react";
+import { AlertTriangle, ArrowRight, FolderKanban, ListChecks } from "lucide-react";
 import HomeBoard from "@/features/tasks/components/HomeBoard";
 import { useGetProjectsQuery } from "@/features/projects/api/projectsApi";
-import type { DashboardStat } from "@/types";
+import { useGetTasksQuery } from "@/features/tasks/api/tasksApi";
+import { PageHeader } from "@/shared/ui/primitives";
 
 export default function HomePage() {
   const { data: projects = [] } = useGetProjectsQuery();
-
-  const stats: DashboardStat[] = [
-    {
-      label: "Active projects",
-      value: String(
-        projects.filter((project) => project.status !== "Completed").length
-      ),
-      helperText: "Live workstreams currently in motion.",
-    },
-    {
-      label: "At risk",
-      value: String(
-        projects.filter((project) => project.status === "At Risk").length
-      ),
-      helperText: "Projects needing closer delivery attention.",
-    },
-    {
-      label: "Average progress",
-      value: `${Math.round(
-        projects.reduce((sum, project) => sum + (project.progress ?? 0), 0) /
-          Math.max(projects.length, 1)
-      )}%`,
-      helperText: "Execution progress across the seeded portfolio.",
-    },
-  ];
+  const { data: tasks = [] } = useGetTasksQuery();
+  const activeProjects = projects.filter(
+    (project) => project.status !== "Completed"
+  ).length;
+  const inProgressTasks = tasks.filter((task) => task.status === "In Progress").length;
+  const highPriorityTasks = tasks.filter(
+    (task) => task.priority?.toLowerCase() === "high" && task.status !== "Completed"
+  ).length;
 
   return (
-    <section className="space-y-5 md:space-y-6">
-      <div className="overflow-hidden rounded-[2rem] border border-white/60 bg-white/70 shadow-[0_24px_80px_-28px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-800/80 dark:bg-slate-900/75">
-        <div className="flex flex-col gap-6 p-5 sm:p-6 md:p-8 xl:flex-row xl:items-end xl:justify-between">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-sky-700 dark:border-sky-900 dark:bg-sky-950/60 dark:text-sky-300">
-              Home Board
-              <MoveRight size={14} />
-            </div>
-            <div className="space-y-3">
-              <h2 className="max-w-3xl text-2xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-3xl md:text-4xl">
-                Delivery board built for momentum, not just status reporting.
-              </h2>
-              <p className="max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 md:text-base">
-                Organize the week like a product team: swipe across lanes on
-                mobile, drag cards between stages, and keep the most important
-                work visible at a glance.
-              </p>
-            </div>
-          </div>
+    <section className="space-y-5">
+      <PageHeader
+        eyebrow="Workspace"
+        title="Delivery overview"
+        description="Current work, ownership, and delivery risk across the workspace."
+        actions={
+          <Link href="/projects" className="ui-button-secondary">
+            View projects
+            <ArrowRight size={15} aria-hidden="true" />
+          </Link>
+        }
+      />
 
-          <div className="flex w-full flex-col gap-3 xl:w-auto xl:min-w-[24rem]">
-            <Link
-              href="/projects"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-            >
-              View all projects
-              <ArrowRight size={16} />
-            </Link>
-            <div className="inline-flex w-full items-center justify-center rounded-full border border-slate-200 bg-white/70 px-5 py-3 text-center text-sm font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-300">
-              Drag cards between lanes to reprioritize
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-3 border-t border-white/70 bg-slate-50/60 p-4 dark:border-slate-800/80 dark:bg-slate-950/30 sm:grid-cols-2 xl:grid-cols-3 md:p-6">
-          {stats.map((stat) => (
-            <article
-              key={stat.label}
-              className="rounded-[1.5rem] border border-white/80 bg-white/80 p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/90"
-            >
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                {stat.label}
-              </p>
-              <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
-                {stat.value}
-              </p>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                {stat.helperText}
-              </p>
-            </article>
-          ))}
-        </div>
+      <div className="ui-panel grid divide-y divide-[var(--border)] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        <OverviewMetric
+          icon={FolderKanban}
+          label="Active projects"
+          value={activeProjects}
+          detail={`${projects.length} total`}
+        />
+        <OverviewMetric
+          icon={ListChecks}
+          label="In progress"
+          value={inProgressTasks}
+          detail={`${tasks.length} tasks`}
+        />
+        <OverviewMetric
+          icon={AlertTriangle}
+          label="High priority"
+          value={highPriorityTasks}
+          detail="Open tasks"
+          warning={highPriorityTasks > 0}
+        />
       </div>
 
       <HomeBoard />
     </section>
+  );
+}
+
+function OverviewMetric({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  warning = false,
+}: {
+  icon: typeof FolderKanban;
+  label: string;
+  value: number;
+  detail: string;
+  warning?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3.5">
+      <span className={`flex h-8 w-8 items-center justify-center rounded-md ${warning ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-[var(--surface-muted)] text-[var(--muted-strong)]"}`}>
+        <Icon size={16} aria-hidden="true" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-[var(--muted)]">{label}</p>
+        <div className="mt-0.5 flex items-baseline gap-2">
+          <span className="text-lg font-[650] tabular-nums">{value}</span>
+          <span className="truncate text-xs text-[var(--muted)]">{detail}</span>
+        </div>
+      </div>
+    </div>
   );
 }

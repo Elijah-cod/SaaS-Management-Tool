@@ -4,6 +4,7 @@ export interface User {
   email: string;
   role?: string;
   avatarUrl?: string | null;
+  teamId?: number | null;
 }
 
 export interface Team {
@@ -11,6 +12,8 @@ export interface Team {
   name: string;
   description?: string | null;
   memberCount?: number;
+  productOwnerUserId?: number | null;
+  projectManagerUserId?: number | null;
 }
 
 export interface Project {

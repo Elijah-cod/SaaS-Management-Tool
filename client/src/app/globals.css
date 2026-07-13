@@ -114,6 +114,10 @@ select:disabled {
   outline: none;
 }
 
+.ui-field-leading-icon {
+  padding-left: 40px;
+}
+
 .ui-field::placeholder {
   color: var(--muted);
 }

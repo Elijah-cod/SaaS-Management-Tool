@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createApp = void 0;
+exports.app = exports.createApp = void 0;
 const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
 const helmet_1 = __importDefault(require("helmet"));
@@ -68,4 +68,6 @@ const createApp = () => {
     return app;
 };
 exports.createApp = createApp;
+exports.app = (0, exports.createApp)();
+exports.default = exports.app;
 //# sourceMappingURL=app.js.map

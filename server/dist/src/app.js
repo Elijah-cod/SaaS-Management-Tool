@@ -17,6 +17,8 @@ const teamRoutes_1 = __importDefault(require("./routes/teamRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const error_handler_1 = require("./shared/http/error-handler");
 const not_found_handler_1 = require("./shared/http/not-found-handler");
+const async_handler_1 = require("./shared/http/async-handler");
+const prisma_1 = require("./shared/database/prisma");
 const createApp = () => {
     const app = (0, express_1.default)();
     const isProduction = env_1.env.nodeEnv === "production";
@@ -46,6 +48,15 @@ const createApp = () => {
             timestamp: new Date().toISOString(),
         });
     });
+    app.get("/ready", (0, async_handler_1.asyncHandler)(async (_req, res) => {
+        await prisma_1.prisma.$queryRaw `SELECT 1`;
+        res.json({
+            status: "ready",
+            service: "server",
+            database: "connected",
+            timestamp: new Date().toISOString(),
+        });
+    }));
     app.use("/auth", authRoutes_1.default);
     app.use("/projects", projectRoutes_1.default);
     app.use("/tasks", taskRoutes_1.default);

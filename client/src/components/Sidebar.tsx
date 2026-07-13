@@ -60,7 +60,7 @@ export default function Sidebar() {
         <button
           type="button"
           onClick={() => dispatch(setIsMobileSidebarOpen(false))}
-          className="ui-icon-button md:hidden"
+          className="ui-icon-button md:!hidden"
           aria-label="Close navigation"
         >
           <X size={18} />

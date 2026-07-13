@@ -44,7 +44,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => dispatch(setIsMobileSidebarOpen(true))}
-            className="ui-icon-button md:hidden"
+            className="ui-icon-button md:!hidden"
             aria-label="Open navigation"
           >
             <Menu size={18} />
@@ -52,7 +52,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => dispatch(setIsSidebarCollapsed(!isSidebarCollapsed))}
-            className="ui-icon-button hidden md:inline-flex"
+            className="ui-icon-button !hidden md:!inline-flex"
             aria-label="Toggle sidebar"
           >
             {isSidebarCollapsed ? (
@@ -81,7 +81,14 @@ export default function Navbar() {
           </div>
           <Link
             href="/search"
-            className="ui-button-secondary hidden sm:inline-flex"
+            className="ui-icon-button sm:!hidden"
+            aria-label="Search workspace"
+          >
+            <Search size={16} />
+          </Link>
+          <Link
+            href="/search"
+            className="ui-button-secondary !hidden sm:!inline-flex"
           >
             <Search size={16} />
             <span>Search</span>

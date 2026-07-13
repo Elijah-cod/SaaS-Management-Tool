@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { AuthError } from "next-auth";
-import { redirect } from "next/navigation";
-import { signIn } from "@/auth";
 import ApiAvailability from "@/features/auth/components/ApiAvailability";
-import { ArrowRight, Boxes, Check, Command } from "lucide-react";
+import LoginForm from "@/features/auth/components/LoginForm";
+import { Boxes, Check, Command } from "lucide-react";
 
 type LoginPageProps = {
   searchParams?: Promise<{
@@ -78,64 +76,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <ApiAvailability />
           </div>
 
-          {hasCredentialsError ? (
-            <div className="mt-4 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2.5 text-sm leading-6 text-rose-700 dark:text-rose-300" role="alert">
-              Sign-in could not be completed. Check the service status above. If it is online, confirm the account credentials and try again.
-            </div>
-          ) : null}
-
-          <form
-          action={async (formData) => {
-            "use server";
-
-            try {
-              await signIn("credentials", {
-                email: formData.get("email"),
-                password: formData.get("password"),
-                redirectTo: "/home",
-              });
-            } catch (error) {
-              if (error instanceof AuthError) {
-                redirect("/login?error=credentials");
-              }
-
-              throw error;
-            }
-          }}
-            className="mt-6 space-y-4"
-        >
-          <label className="block space-y-1.5 text-sm font-semibold">
-            <span>Email address</span>
-            <input
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              defaultValue="amina@saasmanager.app"
-              className="ui-field"
-              placeholder="you@startup.com"
-            />
-          </label>
-          <label className="block space-y-1.5 text-sm font-semibold">
-            <span>Password</span>
-            <input
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              defaultValue="ChangeMe123!"
-              className="ui-field"
-              placeholder="Enter your password"
-            />
-          </label>
-          <button
-            type="submit"
-            className="ui-button-primary w-full"
-          >
-            Sign in to workspace
-            <ArrowRight size={16} aria-hidden="true" />
-          </button>
-        </form>
+          <LoginForm initialError={hasCredentialsError} />
 
           <div className="mt-6 border-t border-[var(--border)] pt-5">
             <div className="flex items-start gap-3 text-xs leading-5 text-[var(--muted)]">

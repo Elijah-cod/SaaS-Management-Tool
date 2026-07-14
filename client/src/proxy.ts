@@ -8,7 +8,8 @@ export default auth((req) => {
   const isPublicAsset =
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/auth") ||
-    pathname === "/favicon.ico";
+    pathname === "/favicon.ico" ||
+    pathname === "/icon.svg";
 
   if (isPublicAsset) {
     return NextResponse.next();

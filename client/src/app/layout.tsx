@@ -5,11 +5,17 @@ import "./globals.css";
 import StoreProvider from "./redux";
 
 export const metadata: Metadata = {
+  applicationName: "SaaS Manager",
   title: {
     default: "SaaS Manager",
     template: "%s · SaaS Manager",
   },
   description: "A focused delivery workspace for startup teams.",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default async function RootLayout({

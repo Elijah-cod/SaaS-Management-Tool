@@ -331,9 +331,10 @@ async function main() {
   >();
 
   for (const projectSeed of projectSeeds) {
+    const { key, ...projectData } = projectSeed;
     projects.set(
-      projectSeed.key,
-      await upsertProject(projectSeed.key, projectSeed)
+      key,
+      await upsertProject(key, projectData)
     );
   }
 

@@ -254,7 +254,8 @@ async function main() {
     ];
     const projects = new Map();
     for (const projectSeed of projectSeeds) {
-        projects.set(projectSeed.key, await upsertProject(projectSeed.key, projectSeed));
+        const { key, ...projectData } = projectSeed;
+        projects.set(key, await upsertProject(key, projectData));
     }
     const taskSeeds = [
         ["task:portal:drag-state", "project:client-portal", "Implement shared drag state", "Create a predictable drag state model that survives lane changes and interaction edge cases.", "Backlog", "High", "Feature", "2026-07-14", "2026-07-24", 5, "amina@saasmanager.app", "daniel@saasmanager.app"],

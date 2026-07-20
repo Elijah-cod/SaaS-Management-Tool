@@ -8,7 +8,8 @@ datasource db {
 }
 
 model Project {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
+  seedKey     String?   @unique
   name        String
   description String?
   startDate   DateTime?
@@ -18,6 +19,7 @@ model Project {
 
 model Task {
   id             Int          @id @default(autoincrement())
+  seedKey        String?      @unique
   title          String
   description    String?
   status         String?
@@ -37,39 +39,42 @@ model Task {
 }
 
 model User {
-  userId             Int      @id @default(autoincrement())
-  email              String   @unique
-  name               String
-  passwordHash       String
-  role               String   @default("Team Member")
-  profilePictureUrl  String?
-  teamId             Int?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  authoredTasks      Task[]   @relation("TaskAuthor")
-  assignedTasks      Task[]   @relation("TaskAssignee")
+  userId            Int      @id @default(autoincrement())
+  email             String   @unique
+  name              String
+  passwordHash      String
+  role              String   @default("Team Member")
+  profilePictureUrl String?
+  teamId            Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  authoredTasks     Task[]   @relation("TaskAuthor")
+  assignedTasks     Task[]   @relation("TaskAssignee")
 }
 
 model Team {
-  id                  Int    @id @default(autoincrement())
-  teamName            String
-  productOwnerUserId  Int?
+  id                   Int     @id @default(autoincrement())
+  seedKey              String? @unique
+  teamName             String
+  productOwnerUserId   Int?
   projectManagerUserId Int?
 }
 
 model Attachment {
-  id        Int    @id @default(autoincrement())
-  fileUrl   String
-  fileName  String?
-  taskId    Int
-  task      Task   @relation(fields: [taskId], references: [id])
+  id           Int     @id @default(autoincrement())
+  seedKey      String? @unique
+  fileUrl      String
+  fileName     String?
+  taskId       Int
+  task         Task    @relation(fields: [taskId], references: [id])
   uploadedById Int
 }
 
 model Comment {
-  id     Int    @id @default(autoincrement())
-  text   String
-  taskId Int
-  task   Task   @relation(fields: [taskId], references: [id])
-  userId Int
+  id      Int     @id @default(autoincrement())
+  seedKey String? @unique
+  text    String
+  taskId  Int
+  task    Task    @relation(fields: [taskId], references: [id])
+  userId  Int
 }

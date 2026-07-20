@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCurrentUser = exports.login = void 0;
+exports.getCurrentUser = exports.refresh = exports.login = void 0;
 const async_handler_1 = require("../../shared/http/async-handler");
 const app_error_1 = require("../../shared/errors/app-error");
 const auth_service_1 = require("./auth.service");
@@ -12,6 +12,16 @@ exports.login = (0, async_handler_1.asyncHandler)(async (req, res) => {
         });
     }
     const sessionPayload = await (0, auth_service_1.authenticateUser)(email, password);
+    res.json(sessionPayload);
+});
+exports.refresh = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+        throw new app_error_1.AppError(400, "Refresh token is required", {
+            code: "INVALID_REFRESH_PAYLOAD",
+        });
+    }
+    const sessionPayload = await (0, auth_service_1.refreshUserSession)(refreshToken);
     res.json(sessionPayload);
 });
 exports.getCurrentUser = (0, async_handler_1.asyncHandler)(async (req, res) => {

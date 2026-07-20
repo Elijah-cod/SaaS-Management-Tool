@@ -1,13 +1,17 @@
 import crypto from "crypto";
 import { env } from "../../config/env";
 
-const TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
+const ACCESS_TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
+const REFRESH_TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 30;
+
+type TokenType = "access" | "refresh";
 
 export type TokenPayload = {
   sub: string;
   email: string;
   role: string;
   exp: number;
+  type?: TokenType;
 };
 
 const encodeBase64Url = (value: string) =>
@@ -30,18 +34,21 @@ const hasMatchingSignature = (signature: string, expectedSignature: string) => {
   return crypto.timingSafeEqual(providedBuffer, expectedBuffer);
 };
 
-export const createAccessToken = (user: {
+type TokenUser = {
   userId: number;
   email: string;
   role: string;
-}) => {
+};
+
+const createToken = (user: TokenUser, type: TokenType, ttlMs: number) => {
   const header = encodeBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const payload = encodeBase64Url(
     JSON.stringify({
       sub: String(user.userId),
       email: user.email,
       role: user.role,
-      exp: Date.now() + TOKEN_TTL_MS,
+      exp: Date.now() + ttlMs,
+      type,
     } satisfies TokenPayload)
   );
   const signature = createSignature(`${header}.${payload}`);
@@ -49,7 +56,13 @@ export const createAccessToken = (user: {
   return `${header}.${payload}.${signature}`;
 };
 
-export const verifyAccessToken = (token: string) => {
+export const createAccessToken = (user: TokenUser) =>
+  createToken(user, "access", ACCESS_TOKEN_TTL_MS);
+
+export const createRefreshToken = (user: TokenUser) =>
+  createToken(user, "refresh", REFRESH_TOKEN_TTL_MS);
+
+const verifyToken = (token: string, expectedType: TokenType) => {
   const [header, payload, signature] = token.split(".");
 
   if (!header || !payload || !signature) {
@@ -78,7 +91,11 @@ export const verifyAccessToken = (token: string) => {
       typeof parsedPayload.email !== "string" ||
       typeof parsedPayload.role !== "string" ||
       typeof parsedPayload.exp !== "number" ||
-      parsedPayload.exp <= Date.now()
+      parsedPayload.exp <= Date.now() ||
+      (expectedType === "refresh" && parsedPayload.type !== "refresh") ||
+      (expectedType === "access" &&
+        parsedPayload.type !== undefined &&
+        parsedPayload.type !== "access")
     ) {
       return null;
     }
@@ -88,3 +105,9 @@ export const verifyAccessToken = (token: string) => {
     return null;
   }
 };
+
+export const verifyAccessToken = (token: string) =>
+  verifyToken(token, "access");
+
+export const verifyRefreshToken = (token: string) =>
+  verifyToken(token, "refresh");

@@ -73,6 +73,33 @@ export const validateLoginBody: Validator<{
   };
 };
 
+export const validateRefreshBody: Validator<{ refreshToken: string }> = (
+  value
+) => {
+  if (!isRecord(value)) {
+    return { success: false, errors: ["Request body must be an object"] };
+  }
+
+  const refreshToken =
+    typeof value.refreshToken === "string" ? value.refreshToken.trim() : "";
+
+  if (!refreshToken) {
+    return { success: false, errors: ["Refresh token is required"] };
+  }
+
+  if (refreshToken.length > 4096) {
+    return {
+      success: false,
+      errors: ["Refresh token must be 4096 characters or fewer"],
+    };
+  }
+
+  return {
+    success: true,
+    data: { refreshToken },
+  };
+};
+
 export const validateProjectBody: Validator<{
   name: string;
   description?: string;

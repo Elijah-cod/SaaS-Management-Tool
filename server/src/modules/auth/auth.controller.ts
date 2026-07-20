@@ -2,7 +2,11 @@ import type { Request, Response } from "express";
 import { asyncHandler } from "../../shared/http/async-handler";
 import type { AuthenticatedRequest } from "../../middleware/auth";
 import { AppError } from "../../shared/errors/app-error";
-import { authenticateUser, getAuthenticatedUser } from "./auth.service";
+import {
+  authenticateUser,
+  getAuthenticatedUser,
+  refreshUserSession,
+} from "./auth.service";
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body as {
@@ -17,6 +21,19 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const sessionPayload = await authenticateUser(email, password);
+  res.json(sessionPayload);
+});
+
+export const refresh = asyncHandler(async (req: Request, res: Response) => {
+  const { refreshToken } = req.body as { refreshToken?: string };
+
+  if (!refreshToken) {
+    throw new AppError(400, "Refresh token is required", {
+      code: "INVALID_REFRESH_PAYLOAD",
+    });
+  }
+
+  const sessionPayload = await refreshUserSession(refreshToken);
   res.json(sessionPayload);
 });
 

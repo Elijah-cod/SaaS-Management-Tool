@@ -132,6 +132,13 @@ After seeding the database, sign in with one of the seeded workspace users:
 - `daniel@saasmanager.app` / `ChangeMe123!`
 - `lina@saasmanager.app` / `ChangeMe123!`
 - `musa@saasmanager.app` / `ChangeMe123!`
+- `grace@saasmanager.app` / `ChangeMe123!`
+- `brian@saasmanager.app` / `ChangeMe123!`
+- `njeri@saasmanager.app` / `ChangeMe123!`
+- `kevin@saasmanager.app` / `ChangeMe123!`
+
+The seed is idempotent: it updates fixtures by stable seed keys and does not
+delete projects, tasks, comments, or attachments created by workspace users.
 
 ## Useful Commands
 
@@ -167,6 +174,12 @@ npm run test
 - `GET /users`
 - `GET /teams`
 - `GET /search?q=<query>`
+
+### Authentication endpoints
+
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `GET /auth/me`
 
 ### Task interaction endpoints
 
@@ -267,11 +280,11 @@ Use managed PostgreSQL in production:
 
 - task attachments are currently metadata-only, not binary file uploads
 - task assignee persistence currently supports a single stored assignee even though the UI can be expanded later to true multi-assignee support
-- the current API token is a signed bearer token and not yet a rotating refresh-token/session pair
+- active sessions rotate short-lived API credentials through a refresh token kept inside the encrypted, HTTP-only Auth.js session cookie
 
 ## Recommended Next Steps
 
 1. Expand integration tests for task mutations and authorization boundaries.
 2. Add real file upload storage for attachments.
-3. Upgrade bearer-token auth to refresh-token or session-based rotation.
+3. Add refresh-token revocation for password changes and account suspension.
 4. Add CI quality gates and approved production migration automation.

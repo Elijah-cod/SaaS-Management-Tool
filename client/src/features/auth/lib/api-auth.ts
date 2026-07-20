@@ -9,6 +9,8 @@ type AuthenticatedUser = {
 
 export type LoginResponse = {
   accessToken: string;
+  accessTokenExpiresAt: number;
+  refreshToken: string;
   user: AuthenticatedUser;
 };
 
@@ -22,6 +24,22 @@ export const authenticateWithApi = async (credentials: {
       "content-type": "application/json",
     },
     body: JSON.stringify(credentials),
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return (await response.json()) as LoginResponse;
+};
+
+export const refreshApiSession = async (refreshToken: string) => {
+  const response = await fetch(`${apiBaseUrl}/auth/refresh`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ refreshToken }),
   });
 
   if (!response.ok) {

@@ -11,7 +11,8 @@ type LoginPageProps = {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = (await searchParams) ?? {};
-  const hasCredentialsError = params.error === "credentials";
+  const hasCredentialsError =
+    params.error === "credentials" || params.error === "session-expired";
 
   return (
     <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] lg:grid lg:grid-cols-[minmax(28rem,0.9fr)_minmax(32rem,1.1fr)]">

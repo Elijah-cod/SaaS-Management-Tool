@@ -3,7 +3,11 @@ import { afterEach, test } from "node:test";
 import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { createApp } from "../app";
-import { hashPassword, createAccessToken } from "../lib/auth";
+import {
+  hashPassword,
+  createAccessToken,
+  createRefreshToken,
+} from "../lib/auth";
 import { prisma } from "../lib/prisma";
 
 type PrismaUser = Awaited<ReturnType<typeof prisma.user.findUnique>>;
@@ -92,11 +96,92 @@ test("POST /auth/login returns an access token for valid persisted credentials",
   assert.equal(response.status, 200);
   const payload = (await response.json()) as {
     accessToken: string;
+    accessTokenExpiresAt: number;
+    refreshToken: string;
     user: { email: string; role: string };
   };
   assert.ok(payload.accessToken);
+  assert.ok(payload.accessTokenExpiresAt > Date.now());
+  assert.ok(payload.refreshToken);
   assert.equal(payload.user.email, "amina@saasmanager.app");
   assert.equal(payload.user.role, "Product Manager");
+});
+
+test(
+  "POST /auth/refresh rotates a refresh token into a fresh session",
+  { concurrency: false },
+  async () => {
+    const fakeUser: NonNullable<PrismaUser> = {
+      userId: 7,
+      email: "amina@saasmanager.app",
+      name: "Amina Hassan",
+      passwordHash: "unused",
+      role: "Product Manager",
+      profilePictureUrl: null,
+      teamId: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    prismaUser.findUnique = (async () =>
+      fakeUser) as unknown as typeof originalUserFindUnique;
+
+    const baseUrl = await startServer();
+    const refreshToken = createRefreshToken(fakeUser);
+    const response = await fetch(`${baseUrl}/auth/refresh`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    assert.equal(response.status, 200);
+    const payload = (await response.json()) as {
+      accessToken: string;
+      accessTokenExpiresAt: number;
+      refreshToken: string;
+      user: { email: string };
+    };
+    assert.ok(payload.accessToken);
+    assert.ok(payload.accessTokenExpiresAt > Date.now());
+    assert.ok(payload.refreshToken);
+    assert.equal(payload.user.email, fakeUser.email);
+  }
+);
+
+test("POST /auth/refresh rejects an access token", { concurrency: false }, async () => {
+  const baseUrl = await startServer();
+  const accessToken = createAccessToken({
+    userId: 7,
+    email: "amina@saasmanager.app",
+    role: "Product Manager",
+  });
+  const response = await fetch(`${baseUrl}/auth/refresh`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ refreshToken: accessToken }),
+  });
+
+  assert.equal(response.status, 401);
+});
+
+test("GET /projects rejects a refresh token", { concurrency: false }, async () => {
+  const baseUrl = await startServer();
+  const refreshToken = createRefreshToken({
+    userId: 7,
+    email: "amina@saasmanager.app",
+    role: "Product Manager",
+  });
+  const response = await fetch(`${baseUrl}/projects`, {
+    headers: {
+      authorization: `Bearer ${refreshToken}`,
+    },
+  });
+
+  assert.equal(response.status, 401);
 });
 
 test("POST /auth/login rejects an invalid request body", { concurrency: false }, async () => {

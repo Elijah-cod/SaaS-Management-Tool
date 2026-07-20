@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Session } from "next-auth";
-import { SessionProvider, useSession } from "next-auth/react";
+import { SessionProvider, signOut, useSession } from "next-auth/react";
 import { Provider } from "react-redux";
 import {
   selectIsDarkMode,
@@ -20,6 +20,7 @@ const THEME_STORAGE_KEY = "saas-manager-theme";
 function SessionTokenBridge() {
   const { data: session, status } = useSession();
   const dispatch = useAppDispatch();
+  const isRecoveringSession = useRef(false);
 
   useEffect(() => {
     dispatch(setAuthStatus(status));
@@ -35,6 +36,19 @@ function SessionTokenBridge() {
 
     dispatch(setAccessToken(null));
   }, [dispatch, session?.accessToken, status]);
+
+  useEffect(() => {
+    if (
+      status !== "authenticated" ||
+      session?.error !== "RefreshAccessTokenError" ||
+      isRecoveringSession.current
+    ) {
+      return;
+    }
+
+    isRecoveringSession.current = true;
+    void signOut({ callbackUrl: "/login?error=session-expired" });
+  }, [session?.error, status]);
 
   return null;
 }
@@ -90,7 +104,11 @@ export default function StoreProvider({
   });
 
   return (
-    <SessionProvider session={session}>
+    <SessionProvider
+      session={session}
+      refetchInterval={5 * 60}
+      refetchOnWindowFocus
+    >
       <Provider store={store}>
         <SessionTokenBridge />
         <ThemePreferenceBridge />

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAuthenticatedUser = exports.authenticateUser = void 0;
+exports.getAuthenticatedUser = exports.refreshUserSession = exports.authenticateUser = void 0;
 const prisma_1 = require("../../shared/database/prisma");
 const app_error_1 = require("../../shared/errors/app-error");
 const password_1 = require("../../shared/auth/password");
@@ -25,10 +25,37 @@ const authenticateUser = async (email, password) => {
     }
     return {
         accessToken: (0, token_1.createAccessToken)(user),
+        accessTokenExpiresAt: Date.now() + 1000 * 60 * 60 * 8,
+        refreshToken: (0, token_1.createRefreshToken)(user),
         user: (0, auth_serializer_1.serializeUser)(user),
     };
 };
 exports.authenticateUser = authenticateUser;
+const refreshUserSession = async (refreshToken) => {
+    const tokenPayload = (0, token_1.verifyRefreshToken)(refreshToken);
+    if (!tokenPayload) {
+        throw new app_error_1.AppError(401, "Refresh token is invalid or expired", {
+            code: "INVALID_REFRESH_TOKEN",
+        });
+    }
+    const user = await prisma_1.prisma.user.findUnique({
+        where: {
+            userId: Number(tokenPayload.sub),
+        },
+    });
+    if (!user) {
+        throw new app_error_1.AppError(401, "Refresh token is invalid or expired", {
+            code: "INVALID_REFRESH_TOKEN",
+        });
+    }
+    return {
+        accessToken: (0, token_1.createAccessToken)(user),
+        accessTokenExpiresAt: Date.now() + 1000 * 60 * 60 * 8,
+        refreshToken: (0, token_1.createRefreshToken)(user),
+        user: (0, auth_serializer_1.serializeUser)(user),
+    };
+};
+exports.refreshUserSession = refreshUserSession;
 const getAuthenticatedUser = async (userId) => {
     const user = await prisma_1.prisma.user.findUnique({
         where: {

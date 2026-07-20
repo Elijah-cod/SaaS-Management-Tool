@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateTaskAttachmentBody = exports.validateTaskCommentBody = exports.validateTaskAssigneeBody = exports.validateCreateTaskBody = exports.validateTaskStatusBody = exports.validateProjectBody = exports.validateLoginBody = exports.validateBody = void 0;
+exports.validateTaskAttachmentBody = exports.validateTaskCommentBody = exports.validateTaskAssigneeBody = exports.validateCreateTaskBody = exports.validateTaskStatusBody = exports.validateProjectBody = exports.validateRefreshBody = exports.validateLoginBody = exports.validateBody = void 0;
 const isRecord = (value) => typeof value === "object" && value !== null;
 const isIsoDate = (value) => !Number.isNaN(Date.parse(value));
 const isTaskStatus = (value) => ["Backlog", "In Progress", "Review", "Completed"].includes(value);
@@ -44,6 +44,26 @@ const validateLoginBody = (value) => {
     };
 };
 exports.validateLoginBody = validateLoginBody;
+const validateRefreshBody = (value) => {
+    if (!isRecord(value)) {
+        return { success: false, errors: ["Request body must be an object"] };
+    }
+    const refreshToken = typeof value.refreshToken === "string" ? value.refreshToken.trim() : "";
+    if (!refreshToken) {
+        return { success: false, errors: ["Refresh token is required"] };
+    }
+    if (refreshToken.length > 4096) {
+        return {
+            success: false,
+            errors: ["Refresh token must be 4096 characters or fewer"],
+        };
+    }
+    return {
+        success: true,
+        data: { refreshToken },
+    };
+};
+exports.validateRefreshBody = validateRefreshBody;
 const validateProjectBody = (value) => {
     if (!isRecord(value)) {
         return { success: false, errors: ["Request body must be an object"] };

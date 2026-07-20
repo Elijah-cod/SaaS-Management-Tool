@@ -3,10 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyAccessToken = exports.createAccessToken = void 0;
+exports.verifyRefreshToken = exports.verifyAccessToken = exports.createRefreshToken = exports.createAccessToken = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const env_1 = require("../../config/env");
-const TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
+const ACCESS_TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
+const REFRESH_TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 30;
 const encodeBase64Url = (value) => Buffer.from(value).toString("base64url");
 const decodeBase64Url = (value) => Buffer.from(value, "base64url").toString("utf8");
 const createSignature = (value) => crypto_1.default.createHmac("sha256", env_1.env.apiAuthSecret).update(value).digest("base64url");
@@ -18,19 +19,23 @@ const hasMatchingSignature = (signature, expectedSignature) => {
     }
     return crypto_1.default.timingSafeEqual(providedBuffer, expectedBuffer);
 };
-const createAccessToken = (user) => {
+const createToken = (user, type, ttlMs) => {
     const header = encodeBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
     const payload = encodeBase64Url(JSON.stringify({
         sub: String(user.userId),
         email: user.email,
         role: user.role,
-        exp: Date.now() + TOKEN_TTL_MS,
+        exp: Date.now() + ttlMs,
+        type,
     }));
     const signature = createSignature(`${header}.${payload}`);
     return `${header}.${payload}.${signature}`;
 };
+const createAccessToken = (user) => createToken(user, "access", ACCESS_TOKEN_TTL_MS);
 exports.createAccessToken = createAccessToken;
-const verifyAccessToken = (token) => {
+const createRefreshToken = (user) => createToken(user, "refresh", REFRESH_TOKEN_TTL_MS);
+exports.createRefreshToken = createRefreshToken;
+const verifyToken = (token, expectedType) => {
     const [header, payload, signature] = token.split(".");
     if (!header || !payload || !signature) {
         return null;
@@ -50,7 +55,11 @@ const verifyAccessToken = (token) => {
             typeof parsedPayload.email !== "string" ||
             typeof parsedPayload.role !== "string" ||
             typeof parsedPayload.exp !== "number" ||
-            parsedPayload.exp <= Date.now()) {
+            parsedPayload.exp <= Date.now() ||
+            (expectedType === "refresh" && parsedPayload.type !== "refresh") ||
+            (expectedType === "access" &&
+                parsedPayload.type !== undefined &&
+                parsedPayload.type !== "access")) {
             return null;
         }
         return parsedPayload;
@@ -59,5 +68,8 @@ const verifyAccessToken = (token) => {
         return null;
     }
 };
+const verifyAccessToken = (token) => verifyToken(token, "access");
 exports.verifyAccessToken = verifyAccessToken;
+const verifyRefreshToken = (token) => verifyToken(token, "refresh");
+exports.verifyRefreshToken = verifyRefreshToken;
 //# sourceMappingURL=token.js.map

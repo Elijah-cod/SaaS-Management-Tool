@@ -73,8 +73,69 @@ const startServer = async () => {
     strict_1.default.equal(response.status, 200);
     const payload = (await response.json());
     strict_1.default.ok(payload.accessToken);
+    strict_1.default.ok(payload.accessTokenExpiresAt > Date.now());
+    strict_1.default.ok(payload.refreshToken);
     strict_1.default.equal(payload.user.email, "amina@saasmanager.app");
     strict_1.default.equal(payload.user.role, "Product Manager");
+});
+(0, node_test_1.test)("POST /auth/refresh rotates a refresh token into a fresh session", { concurrency: false }, async () => {
+    const fakeUser = {
+        userId: 7,
+        email: "amina@saasmanager.app",
+        name: "Amina Hassan",
+        passwordHash: "unused",
+        role: "Product Manager",
+        profilePictureUrl: null,
+        teamId: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    };
+    prismaUser.findUnique = (async () => fakeUser);
+    const baseUrl = await startServer();
+    const refreshToken = (0, auth_1.createRefreshToken)(fakeUser);
+    const response = await fetch(`${baseUrl}/auth/refresh`, {
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken }),
+    });
+    strict_1.default.equal(response.status, 200);
+    const payload = (await response.json());
+    strict_1.default.ok(payload.accessToken);
+    strict_1.default.ok(payload.accessTokenExpiresAt > Date.now());
+    strict_1.default.ok(payload.refreshToken);
+    strict_1.default.equal(payload.user.email, fakeUser.email);
+});
+(0, node_test_1.test)("POST /auth/refresh rejects an access token", { concurrency: false }, async () => {
+    const baseUrl = await startServer();
+    const accessToken = (0, auth_1.createAccessToken)({
+        userId: 7,
+        email: "amina@saasmanager.app",
+        role: "Product Manager",
+    });
+    const response = await fetch(`${baseUrl}/auth/refresh`, {
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken: accessToken }),
+    });
+    strict_1.default.equal(response.status, 401);
+});
+(0, node_test_1.test)("GET /projects rejects a refresh token", { concurrency: false }, async () => {
+    const baseUrl = await startServer();
+    const refreshToken = (0, auth_1.createRefreshToken)({
+        userId: 7,
+        email: "amina@saasmanager.app",
+        role: "Product Manager",
+    });
+    const response = await fetch(`${baseUrl}/projects`, {
+        headers: {
+            authorization: `Bearer ${refreshToken}`,
+        },
+    });
+    strict_1.default.equal(response.status, 401);
 });
 (0, node_test_1.test)("POST /auth/login rejects an invalid request body", { concurrency: false }, async () => {
     const baseUrl = await startServer();

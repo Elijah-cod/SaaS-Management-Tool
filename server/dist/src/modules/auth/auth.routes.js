@@ -12,7 +12,14 @@ const loginRateLimiter = (0, rate_limit_1.createRateLimiter)({
     message: "Too many login attempts. Please wait a few minutes and try again.",
     keyPrefix: "auth-login",
 });
+const refreshRateLimiter = (0, rate_limit_1.createRateLimiter)({
+    windowMs: 1000 * 60 * 5,
+    max: 60,
+    message: "Too many session refresh attempts. Please try again shortly.",
+    keyPrefix: "auth-refresh",
+});
 router.post("/login", loginRateLimiter, (0, validation_1.validateBody)(validation_1.validateLoginBody), auth_controller_1.login);
+router.post("/refresh", refreshRateLimiter, (0, validation_1.validateBody)(validation_1.validateRefreshBody), auth_controller_1.refresh);
 router.get("/me", auth_1.requireAuth, auth_controller_1.getCurrentUser);
 exports.default = router;
 //# sourceMappingURL=auth.routes.js.map

@@ -1,11 +1,16 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { authenticateWithApi } from "@/features/auth/lib/api-auth";
+import {
+  authenticateWithApi,
+  refreshApiSession,
+} from "@/features/auth/lib/api-auth";
+
+const REFRESH_BUFFER_MS = 1000 * 60;
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.AUTH_SECRET,
   trustHost: true,
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 30 },
   providers: [
     Credentials({
       credentials: {
@@ -34,6 +39,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               name: data.user.name,
               role: data.user.role,
               accessToken: data.accessToken,
+              accessTokenExpiresAt: data.accessTokenExpiresAt,
+              refreshToken: data.refreshToken,
             };
           })
           .catch(() => null);
@@ -41,12 +48,52 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.accessToken = user.accessToken;
+        token.accessTokenExpiresAt = user.accessTokenExpiresAt;
+        token.refreshToken = user.refreshToken;
+        token.error = undefined;
+        return token;
       }
+
+      const accessTokenExpiresAt =
+        typeof token.accessTokenExpiresAt === "number"
+          ? token.accessTokenExpiresAt
+          : 0;
+
+      if (
+        typeof token.accessToken === "string" &&
+        Date.now() < accessTokenExpiresAt - REFRESH_BUFFER_MS
+      ) {
+        return token;
+      }
+
+      if (typeof token.refreshToken !== "string") {
+        token.accessToken = undefined;
+        token.error = "RefreshAccessTokenError";
+        return token;
+      }
+
+      const refreshedSession = await refreshApiSession(token.refreshToken).catch(
+        () => null
+      );
+
+      if (!refreshedSession) {
+        token.accessToken = undefined;
+        token.refreshToken = undefined;
+        token.error = "RefreshAccessTokenError";
+        return token;
+      }
+
+      token.id = refreshedSession.user.id;
+      token.role = refreshedSession.user.role;
+      token.accessToken = refreshedSession.accessToken;
+      token.accessTokenExpiresAt = refreshedSession.accessTokenExpiresAt;
+      token.refreshToken = refreshedSession.refreshToken;
+      token.error = undefined;
       return token;
     },
     session({ session, token }) {
@@ -56,6 +103,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       session.accessToken =
         typeof token.accessToken === "string" ? token.accessToken : "";
+      session.error =
+        token.error === "RefreshAccessTokenError" ? token.error : undefined;
       return session;
     },
   },
